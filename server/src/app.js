@@ -17,14 +17,16 @@ app.use(express.json())
 
 app.get('/api/data', (req, res) => {
     res.send(data)
-    
 })
 
 app.get('/api/uploads', (req, res) => {
     readStream.on('data', (chunk) => {
         res.send(chunk)
     })
-    
+})
+
+app.post('/api/account/registration', (req, res) => {
+    res.send(data)
 })
 
 app.listen(port, () => {
