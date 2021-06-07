@@ -1,0 +1,16 @@
+POST http://localhost:8000/api/accounts/register HTTP/1.1
+content-type: application/json
+
+{
+    "username": "user",
+    "password": "user",
+    "first_name": "user",
+    "last_name": "last_user",
+    "email_address": "richard.oey@jazzhipster.com.tw",
+    "is_active": true,
+    "is_superuser": false,
+    "is_staff": true
+}
+
+
+

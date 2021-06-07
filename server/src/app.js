@@ -1,37 +1,45 @@
 const express = require('express')
 const morgan = require('morgan')
+const { MongoClient } = require('mongodb')
 const fs = require('fs')
 const app = express()
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 8000
+const jwt = require('jsonwebtoken')
 
-const readStream = fs.createReadStream('./uploads/data.txt', { encoding: 'utf8' })
-
-const data = [
-    { "id": 1, "name": "Richard" },
-    { "id": 2, "name": "Firdaus" },
-    { "id": 3, "name": "Oeyliawan" },
-]
-
-app.use(morgan('dev'))
-app.use(express.json())
-
-app.get('/api/data', (req, res) => {
-    res.send(data)
-})
-
-app.get('/api/uploads', (req, res) => {
-    readStream.on('data', (chunk) => {
-        res.send(chunk)
+app.use(
+    express.urlencoded({
+        extended: true
     })
+)
+app.use(express.json())
+const authRoute = require('../routers/index')
+
+// Route Middlewares
+app.use('/api', authRoute)
+
+// const readStream = fs.createReadStream('./uploads/data.txt', { encoding: 'utf8' })
+// app.get('/api/uploads', (req, res) => {
+//     readStream.on('data', (chunk) => {
+//         res.send(chunk)
+//     })
+// })
+
+// const changeStream = client.watch([
+//     { $match: { operationType: "insert" } },
+//     {
+//         $project: {
+//             "fullDocument.name": 1,
+//             "fullDocument.address": 1,
+//         },
+//     },
+// ])
+
+// changeStream.on("change", change => {
+//     const { name, address } = change.fullDocument;
+//     console.log(`New order for ${name} at ${address}.`);
+//   });
+
+app.listen(port, function (err) {
+    if (err) console.log("Error in server setup")
+    console.log("Server listening on port", port);
 })
-
-app.post('/api/account/registration', (req, res) => {
-    res.send(data)
-})
-
-app.listen(port, () => {
-    console.log(`app listening at http://localhost:${port}`);
-})
-
-
-
