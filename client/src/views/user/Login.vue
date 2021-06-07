@@ -1,6 +1,5 @@
 <template>
   <a-row
-    :type="flex"
     justify="center"
     :style="{
       paddingTop: '100px',

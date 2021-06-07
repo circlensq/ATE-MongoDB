@@ -15,24 +15,24 @@
         </a-col>
       </a-row>
       <div class="main">
-        <a-form id="formForgotPassword">
-          <a-input
-            v-model:value="formState.email"
-            placeholder="type your email, e.g. public@jazzhispter.com.tw"
-            :style="{ marginBottom: '20px' }"
-          />
+        <a-form id="formLogin">
+          <a-input default-value="0" maxlength="1"/>
+          <a-input default-value="0" maxlength="1"/>
+          <a-input default-value="0" maxlength="1"/>
+          <a-input default-value="0" maxlength="1"/>
+          <a-input default-value="0" maxlength="1"/>
+          <a-input default-value="0" maxlength="1"/>
 
-          <a-button type="primary" :style="{ width: '100%' }"
-            >Send your to your email</a-button
-          >
+          <a-button type="primary" :style="{ width: '100%' }">Confirm</a-button>
           <a-row
             justify="center"
             :style="{ textAlign: 'center', marginTop: '10px' }"
           >
             <a-col>
+              Don't have account?
               <a-typography-link href="#" target="_blank">
-                <router-link :to="{ name: 'Login' }">
-                  Back to login?
+                <router-link :to="{ name: 'Register' }">
+                  Register now
                 </router-link>
               </a-typography-link>
             </a-col>
@@ -50,7 +50,8 @@ export default defineComponent({
   setup() {
     const formState = reactive({
       layout: "horizontal",
-      email: "",
+      username: "",
+      password: "",
     });
 
     return {
@@ -60,5 +61,10 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
+.ant-input {
+  width: 50px;
+  height: 100px;
+  margin: 9px;
+}
 </style>

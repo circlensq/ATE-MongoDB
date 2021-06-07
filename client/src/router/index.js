@@ -31,6 +31,11 @@ const routes = [
     name: 'ForgotPassword',
     component: () => import('@/views/user/ForgotPassword.vue'),
   },
+  {
+    path: '/confirm',
+    name: 'ConfirmAccount',
+    component: () => import('@/views/user/Confirm.vue'),
+  },
 ]
 
 const router = createRouter({

@@ -1,6 +1,5 @@
 <template>
   <a-row
-    :type="flex"
     justify="center"
     :style="{
       paddingTop: '100px',
@@ -96,7 +95,7 @@ export default defineComponent({
       email: "",
       username: "",
       password: "",
-      comfirmPassword: "",
+      confirmPassword: "",
     });
 
     return {
