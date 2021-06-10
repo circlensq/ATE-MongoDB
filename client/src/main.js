@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 
 import {
+    Alert,
     Breadcrumb,
     Button,
     Card,
@@ -11,7 +12,9 @@ import {
     Input,
     Layout,
     Menu,
+    Result,
     Row,
+    Spin,
     Tabs,
     Typography,
 } from "ant-design-vue";
@@ -21,6 +24,7 @@ import "ant-design-vue/dist/antd.css"; // or 'ant-design-vue/dist/antd.less'
 const app = createApp(App)
 
 const components = [
+    Alert,
     Breadcrumb,
     Button,
     Card,
@@ -29,7 +33,9 @@ const components = [
     Input,
     Layout,
     Menu,
+    Result,
     Row,
+    Spin,
     Tabs,
     Typography
 ]

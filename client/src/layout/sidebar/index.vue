@@ -17,7 +17,6 @@
       v-model:openKeys="openKeys"
       :style="{ height: '100%', borderRight: 0 }"
     >
-      <a-menu-item key="1">
         <a-sub-menu key="sub1">
           <template #title>
             <span class="nav-text">
@@ -27,10 +26,8 @@
           </template>
           <a-menu-item key="1">Analysis</a-menu-item>
           <a-menu-item key="2">Monitor</a-menu-item>
-          <a-menu-item key="3">option3</a-menu-item>
         </a-sub-menu>
-      </a-menu-item>
-      <a-menu-item key="2">
+      <a-menu-item key="4">
         <UserOutlined />
         <span>Account</span>
       </a-menu-item>
@@ -58,6 +55,7 @@ export default defineComponent({
 
     return {
       selectedKeys: ref(["1"]),
+      openKeys: ref(["sub1"]),
       onCollapse,
       onBreakpoint,
     };
