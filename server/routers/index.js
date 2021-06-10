@@ -6,8 +6,14 @@ const userController = require('../controllers/user')
 // Register a new User
 router.post('/accounts/register', userController.register)
 
+// Register Utilities
+router.post('/accounts/register/checkUsername', userController.checkUsername)
+router.post('/accounts/register/checkMaxEmailUsage', userController.checkMaxEmailUsage)
+
 // Login user
 router.post('/accounts/login', userController.login)
+// Login code user 
+router.post('/accounts/login/code', userController.submitLoginCode)
 
 // Auth Superuser only
 router.get('/superuser', verifyUserToken, IsSuperuser, userController.userEvent)
