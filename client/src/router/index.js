@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import BaseLayout from '../layout/BaseLayout.vue'
+// import axios from 'axios'
 
 const routes = [
   {
@@ -7,13 +8,23 @@ const routes = [
     name: 'Layout',
     redirect: '/dashboard/analysis',
     component: BaseLayout,
+    // beforeEnter: (to, from) => {
+    //   // reject the navigation
+    //   return false
+    // },
     children: [
       {
         path: '/dashboard/analysis',
         component: () => import('@/views/Home.vue'),
         name: 'Analysis',
         meta: { title: 'Analysis', affix: true}
-      }
+      },
+      {
+        path: '/dashboard/list',
+        component: () => import('@/views/dashboard/List.vue'),
+        name: 'List',
+        meta: { title: 'Test List', affix: true}
+      },
     ]
   },
   {
@@ -26,16 +37,17 @@ const routes = [
     name: 'Register',
     component: () => import('@/views/user/Register.vue'),
   },
-  {
-    path: '/forgotpassword',
-    name: 'ForgotPassword',
-    component: () => import('@/views/user/ForgotPassword.vue'),
-  },
+  // {
+  //   path: '/forgotpassword',
+  //   name: 'ForgotPassword',
+  //   component: () => import('@/views/user/ForgotPassword.vue'),
+  // },
   {
     path: '/confirm',
     name: 'ConfirmAccount',
     component: () => import('@/views/user/Confirm.vue'),
   },
+  
 ]
 
 const router = createRouter({

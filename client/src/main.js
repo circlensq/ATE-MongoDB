@@ -4,17 +4,22 @@ import router from './router'
 
 import {
     Alert,
+    Avatar,
     Breadcrumb,
     Button,
     Card,
     Col,
+    ConfigProvider,
+    Dropdown,
     Form,
     Input,
     Layout,
     Menu,
     Result,
     Row,
+    Space,
     Spin,
+    Table,
     Tabs,
     Typography,
 } from "ant-design-vue";
@@ -25,17 +30,22 @@ const app = createApp(App)
 
 const components = [
     Alert,
+    Avatar,
     Breadcrumb,
     Button,
     Card,
     Col,
+    ConfigProvider,
+    Dropdown,
     Form,
     Input,
     Layout,
     Menu,
     Result,
     Row,
+    Space,
     Spin,
+    Table,
     Tabs,
     Typography
 ]

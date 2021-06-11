@@ -17,16 +17,21 @@
       v-model:openKeys="openKeys"
       :style="{ height: '100%', borderRight: 0 }"
     >
-        <a-sub-menu key="sub1">
-          <template #title>
-            <span class="nav-text">
-              <AppstoreOutlined />
-              Dashboard
-            </span>
-          </template>
-          <a-menu-item key="1">Analysis</a-menu-item>
-          <a-menu-item key="2">Monitor</a-menu-item>
-        </a-sub-menu>
+      <a-sub-menu key="sub1">
+        <template #title>
+          <span class="nav-text">
+            <AppstoreOutlined />
+            Dashboard
+          </span>
+        </template>
+        <a-menu-item key="1">Analysis</a-menu-item>
+        <a-menu-item key="2">Monitor</a-menu-item>
+        <a-menu-item key="3">
+          <router-link :to="{ name: 'List' }">
+            List
+          </router-link>
+        </a-menu-item>
+      </a-sub-menu>
       <a-menu-item key="4">
         <UserOutlined />
         <span>Account</span>
@@ -35,13 +40,13 @@
   </a-layout-sider>
 </template>
 <script>
-import { defineComponent, ref} from "vue";
+import { defineComponent, ref } from "vue";
 import { AppstoreOutlined, UserOutlined } from "@ant-design/icons-vue";
 
 export default defineComponent({
   components: {
     AppstoreOutlined,
-    UserOutlined,
+    UserOutlined
   },
 
   setup() {
@@ -49,7 +54,7 @@ export default defineComponent({
       console.log(collapsed, type);
     };
 
-    const onBreakpoint = (broken) => {
+    const onBreakpoint = broken => {
       console.log(broken);
     };
 
@@ -57,7 +62,7 @@ export default defineComponent({
       selectedKeys: ref(["1"]),
       openKeys: ref(["sub1"]),
       onCollapse,
-      onBreakpoint,
+      onBreakpoint
     };
   }
 });

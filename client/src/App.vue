@@ -1,5 +1,5 @@
 <template>
-  <router-view/>
+    <router-view />
 </template>
 
 <style>
@@ -7,5 +7,4 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
 </style>
