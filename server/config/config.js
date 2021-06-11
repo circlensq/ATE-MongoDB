@@ -1,5 +1,6 @@
 module.exports = {
-    DB_HOST: 'mongodb://localhost:27017/ate_mongodb',
+    DB_HOST: 'mongodb://localhost:27017',
+    DB_NAME: 'ate_mongodb',
     HOST: 'http://localhost:8080',
     TOKEN_SECRET: 'jzhpstrcrp0222225678',
     MINUTES_LOGIN_TIME: 3,

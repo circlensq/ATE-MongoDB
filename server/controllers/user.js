@@ -1,15 +1,13 @@
-const { MongoClient } = require('mongodb')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const config = require('../config/config')
-const dbURI = config.DB_HOST
 const maxEmailAccounts = config.MAX_EMAIL_EXISTS
 const nodeoutlook = require('./nodeoutlook')
+const cookieParser = require('cookie-parser')
 
-const client = new MongoClient(dbURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+// MongoDB Connection
+const mongoUtil = require('../src/mongoUtil')
+const db = mongoUtil.getDb()
 
 const sendLoginCodeEmail = (email, loginCode) => {
     nodeoutlook.sendEmail({
@@ -28,23 +26,6 @@ const sendLoginCodeEmail = (email, loginCode) => {
         onSuccess: (i) => console.log(i)
     });
 }
-
-async function run() {
-    try {
-        // Connect the client to the server
-        await client.connect();
-        // Establish and verify connection
-        await client.db("test").command({ ping: 1 });
-        console.log("Connected successfully to server");
-    } catch (err) {
-        console.log('Error: ', error);
-    } finally {
-        // Ensures that the client will close when you finish/error
-        // await client.close();
-    }
-}
-
-run().catch(console.error)
 
 exports.register = async (req, res) => {
 
@@ -87,7 +68,7 @@ exports.register = async (req, res) => {
         }
 
         // Save a new user in database
-        const result = await client.db("ate_mongodb").collection("auth_users").insertOne(new_user)
+        const result = await db.collection("auth_users").insertOne(new_user)
         console.log(`New account is created with the following id: ${result.insertedId}`)
 
         res.status(200).send({ 'message': `Registration is successful. Please login again` })
@@ -99,16 +80,17 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
 
+    // read cookies
     const userQuery = {
         username: req.body.username,
     }
 
-    const result = await client.db("ate_mongodb").collection("auth_users").findOne(userQuery)
+    const result = await db.collection("auth_users").findOne(userQuery)
 
     if (result) {
         const validPass = await bcrypt.compare(req.body.password, result.password)
         // If password doesn't match
-        if (!validPass) return res.status(401).send("Credential is wrong");
+        if (!validPass) return res.status(401).send({ 'error': 'Credential is wrong' });
 
         // TODO add if (validPass & localstorage keeplogin)
 
@@ -116,7 +98,7 @@ exports.login = async (req, res) => {
             // If matches, client redirects to login code page
             const loginCode = Math.floor(100000 + Math.random() * 900000) /*create 6 digits random number*/
 
-            const minutesToAdd = config.MINUTES_LOGIN_TIME; // login code expiry time after login 
+            const maxAge = config.NORMAL_LOGIN_DAYS; // login code expiry time after login 
             const currentDate = new Date();
             const loginCodeExpired = new Date(currentDate.getTime() + minutesToAdd * 60000);
 
@@ -124,13 +106,15 @@ exports.login = async (req, res) => {
             sendLoginCodeEmail(result.email_address, loginCode)
 
             let newValues = { $set: { login_code: loginCode, login_code_expired_time: loginCodeExpired } };
-            client.db("ate_mongodb").collection("auth_users").updateOne(userQuery, newValues, (err, res) => {
+            db.collection("auth_users").updateOne(userQuery, newValues, (err, res) => {
                 if (err) throw err;
                 console.log("1 document updated");
                 console.log(`Login Attempts ${req.body.username} with code: ${loginCode}`)
             });
-            const token = jwt.sign(payload, config.TOKEN_SECRET, { expiresIn: minutesToAdd * 60000 }) /* Expires token in 5 minutes */
 
+            const token = jwt.sign(payload, config.TOKEN_SECRET, { expiresIn: maxAge * 60000 }) /* Expires token in 5 minutes */
+            res.cookie('token', token, { maxAge: maxAge * 60000 })
+            console.log(res)
             return res.status(200).send({ token, 'message': `One more step, please input the login code` })
 
         } else {
@@ -165,7 +149,7 @@ exports.submitLoginCode = async (req, res) => {
             email_address: userToken.email_address
         }
 
-        const result = await client.db("ate_mongodb").collection("auth_users").findOne(userQuery)
+        const result = await db.collection("auth_users").findOne(userQuery)
         // Create and assign token
         let payload = {
             id: result._id,
@@ -219,7 +203,7 @@ exports.checkMaxEmailUsage = async (req, res) => {
 
     const emailAddress = req.body.email_address
 
-    const countEmailExists = await client.db("ate_mongodb")
+    const countEmailExists = await db
         .collection("auth_users")
         .find({
             email_address: emailAddress
@@ -239,7 +223,7 @@ exports.checkUsername = async (req, res) => {
 
     const username = req.body.username
     // Check whether username 
-    const isUsernameExists = await client.db("ate_mongodb")
+    const isUsernameExists = await db
         .collection("auth_users")
         .findOne({
             username: username
