@@ -90,27 +90,53 @@
 </template>
 
 <script>
-import { defineComponent, reactive, ref } from "vue";
+import { defineComponent } from "vue";
 import axios from "axios";
-import router from "../../router/index";
 
 export default defineComponent({
-  setup() {
-    const formState = reactive({
-      layout: "vertical",
-      email: "",
-      username: "",
-      password: "",
-      confirmPassword: ""
-    });
-    const spinning = ref(false);
-
-    const changeSpinning = () => {
-      spinning.value = !spinning.value;
+  data() {
+    return {
+      formState: {
+        layout: "vertical",
+        email: "",
+        username: "",
+        password: "",
+        confirmPassword: ""
+      },
+      spinning: false,
+      rules: {
+        email: [
+          {
+            validator: this.checkEmailJazzHipster,
+            trigger: ["change", "blur"]
+          }
+        ],
+        username: [
+          {
+            validator: this.checkUsername,
+            trigger: ["change", "blur"]
+          }
+        ],
+        confirmPassword: [
+          {
+            validator: this.checkConfirmPassword,
+            trigger: ["change", "blur"]
+          }
+        ]
+      }
     };
-
-    let checkUsername = async (rule, value) => {
-      if (!value) {
+  },
+  watch: {},
+  methods: {
+    changeSpinning() {
+      this.spinning = !this.spinning;
+    },
+    handleFinish() {
+      this.submitRegister();
+    },
+    async checkUsername() {
+      const username = this.formState.username
+      if (!username) {
         return Promise.reject("Please input the username");
       }
 
@@ -118,19 +144,19 @@ export default defineComponent({
         method: "post",
         url: "/api/accounts/register/checkUsername",
         data: {
-          username: formState.username
+          username: this.formState.username
         }
       }).then(res => {
         if (res.data.error) {
           return Promise.reject(res.data.error);
         }
       });
-    };
+    },
+    checkConfirmPassword() {
+      const confirmPassword = this.formState.confirmPassword
+      const isValid = confirmPassword === this.formState.password ? true : false;
 
-    let checkConfirmPassword = async (rule, value) => {
-      const isValid = value === formState.password ? true : false;
-
-      if (!value) {
+      if (!confirmPassword) {
         return Promise.reject("Please type password once again");
       }
 
@@ -139,13 +165,14 @@ export default defineComponent({
       } else {
         return Promise.resolve();
       }
-    };
+    },
 
-    let checkEmailJazzHipster = async (rule, value) => {
+    async checkEmailJazzHipster() {
+      const email = this.formState.email
       const re = /^[a-zA-Z0-9](\.?[a-zA-Z0-9]){1,}@jazzhipster\.com\.tw$/g;
-      const isValid = re.test(String(value).toLowerCase());
+      const isValid = re.test(String(email).toLowerCase());
 
-      if (!value) {
+      if (!email) {
         return Promise.reject("Please input the email");
       }
 
@@ -153,7 +180,7 @@ export default defineComponent({
         method: "post",
         url: "/api/accounts/register/checkMaxEmailUsage",
         data: {
-          email_address: formState.email
+          email_address: email
         }
       }).then(res => {
         if (res.data.error) {
@@ -166,45 +193,19 @@ export default defineComponent({
       } else {
         return Promise.resolve();
       }
-    };
-
-    const handleFinish = () => {
-      submitRegister();
-    };
-
-    const rules = {
-      email: [
-        {
-          validator: checkEmailJazzHipster,
-          trigger: ["change", "blur"]
-        }
-      ],
-      username: [
-        {
-          validator: checkUsername,
-          trigger: ["change", "blur"]
-        }
-      ],
-      confirmPassword: [
-        {
-          validator: checkConfirmPassword,
-          trigger: ["change", "blur"]
-        }
-      ]
-    };
-
-    const submitRegister = () => {
-      let name = formState.email.split("@")[0];
+    },
+    submitRegister() {
+      let name = this.formState.email.split("@")[0];
       let firstName = name.split(".")[0];
       let lastName = name.split(".")[1];
-      changeSpinning();
+      this.changeSpinning();
       axios({
         method: "post",
         url: "/api/accounts/register",
         data: {
-          username: formState.username,
-          password: formState.password,
-          email_address: formState.email,
+          username: this.formState.username,
+          password: this.formState.password,
+          email_address: this.formState.email,
           first_name: firstName,
           last_name: lastName || "JS",
           is_active: true,
@@ -212,20 +213,11 @@ export default defineComponent({
           is_superuser: false
         }
       }).then(() => {
-        changeSpinning();
+        this.changeSpinning();
 
-        router.push({ name: "Login" });
+        this.$router.push({ name: "Login" });
       });
-    };
-
-    return {
-      formState,
-      rules,
-      handleFinish,
-      submitRegister,
-      spinning,
-      changeSpinning
-    };
+    }
   }
 });
 </script>

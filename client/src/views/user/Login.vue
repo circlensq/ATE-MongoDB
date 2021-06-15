@@ -38,14 +38,14 @@
         <div class="main">
           <a-form id="formLogin">
             <a-input
-              v-model:value="formState.username"
+              v-model:value="username"
               placeholder="username"
               :style="{ marginBottom: '20px' }"
               @keypress.enter="submitLogin"
             />
 
             <a-input
-              v-model:value="formState.password"
+              v-model:value="password"
               placeholder="password"
               type="password"
               :style="{ marginBottom: '20px' }"
@@ -92,77 +92,100 @@
 </template>
 
 <script>
-import { defineComponent, reactive, ref } from "vue";
-import axios from "axios";
-import router from "../../router/index";
+import { defineComponent } from "vue";
+import axios from 'axios'
 
 export default defineComponent({
-  setup() {
-    const formState = reactive({
-      layout: "horizontal",
-      username: "",
-      password: ""
-    });
-
-    const spinning = ref(false);
-
-    const changeSpinning = () => {
-      spinning.value = !spinning.value;
-    };
-
-    const showToastError = ref(false);
-    const showToastSuccess = ref(false);
-    const errorLogin = ref("");
-    const needGiggle = ref(false);
-
-    const triggerToast = () => {
-      if (showToastError.value == false) showToastError.value = true;
+  data() {
+    return {
+      username: '',
+      password: '',
+      spinning: false,
+      showToastSuccess: false,
+      errorLogin: '',
+      needGiggle: false,
+      showToastError: false,
+    }
+  },
+  computed: {
+    
+  },
+  methods: {
+    changeSpinning () {
+      this.spinning = !this.spinning;
+    },
+    triggerToast () {
+      if (this.showToastError == false) this.showToastError = true;
       else {
-        needGiggle.value = true;
-        setTimeout(() => (needGiggle.value = false), 300);
+        this.needGiggle = true;
+        setTimeout(() => (this.needGiggle = false), 300);
       }
-    };
-
-    const submitLogin = () => {
-      axios({
+    },
+    createFreshUserObject () {
+      return {
+        username: '',
+        password: '',
+      }
+    },
+    submitLogin () {
+       axios({
         method: "post",
         url: "/api/accounts/login",
         data: {
-          username: formState.username,
-          password: formState.password
+          username: this.username,
+          password: this.password
         }
       })
         .then(res => {
-          showToastError.value = false;
+          this.showToastError = false;
 
           setTimeout(() => {
-            showToastSuccess.value = true;
+            this.showToastSuccess = true;
           }, 300);
 
           setTimeout(() => {
-            changeSpinning();
-            if (res.data.message) router.push({ name: "Layout" });
+            this.changeSpinning();
+            if (res.data.message) this.$router.push({ name: "Layout" });
           }, 1000);
         })
-        .catch(function(error) {
+        .catch((error) => {
           if (error.response && error.response.status === 401) {
-            errorLogin.value = error.response.data.error;
-            triggerToast();
+            this.errorLogin = error.response.data.error;
+            this.triggerToast();
           }
         });
-    };
-
-    return {
-      formState,
-      submitLogin,
-      showToastError,
-      showToastSuccess,
-      triggerToast,
-      errorLogin,
-      spinning,
-      needGiggle
-    };
+    }
   }
+
+    // const submitLogin = () => {
+    //   axios({
+    //     method: "post",
+    //     url: "/api/accounts/login",
+    //     data: {
+    //       username: formState.username,
+    //       password: formState.password
+    //     }
+    //   })
+    //     .then(res => {
+    //       showToastError.value = false;
+
+    //       setTimeout(() => {
+    //         showToastSuccess.value = true;
+    //       }, 300);
+
+    //       setTimeout(() => {
+    //         changeSpinning();
+    //         if (res.data.message) router.push({ name: "Layout" });
+    //       }, 1000);
+    //     })
+    //     .catch(function(error) {
+    //       if (error.response && error.response.status === 401) {
+    //         errorLogin.value = error.response.data.error;
+    //         triggerToast();
+    //       }
+    //     });
+    // };
+
 });
 </script>
 
