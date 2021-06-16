@@ -2,7 +2,7 @@ const router = require('express').Router()
 const { verifyUserToken, IsSuperuser, IsStaff, IsActive } = require("../middleware/auth");
 
 const userController = require('../controllers/user')
-const testController = require('../controllers/test')
+const testController = require('../controllers/testData')
 
 // Register a new User
 router.post('/accounts/register', userController.register)
@@ -25,8 +25,11 @@ router.get('/staff', verifyUserToken, IsStaff, userController.userEvent)
 // Auth user only
 router.get('/events', verifyUserToken, IsActive, userController.userEvent)
 
-// Test route
+// Test Data route
 router.get('/tests/all', testController.getAll)
 router.get('/tests/updateData', testController.getUpdateData)
+
+// Upload File API route
+router.get('upload/file')
 
 module.exports = router
