@@ -10,11 +10,13 @@ import {
     Breadcrumb,
     Button,
     Card,
+    Checkbox,
     Col,
     ConfigProvider,
     Dropdown,
     Form,
     Input,
+    InputNumber,
     Layout,
     Menu,
     Result,
@@ -23,6 +25,7 @@ import {
     Spin,
     Table,
     Tabs,
+    Tag,
     Typography,
 } from "ant-design-vue";
 
@@ -36,11 +39,13 @@ const components = [
     Breadcrumb,
     Button,
     Card,
+    Checkbox,
     Col,
     ConfigProvider,
     Dropdown,
     Form,
     Input,
+    InputNumber,
     Layout,
     Menu,
     Result,
@@ -49,6 +54,7 @@ const components = [
     Spin,
     Table,
     Tabs,
+    Tag,
     Typography
 ]
 

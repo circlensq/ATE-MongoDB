@@ -2,8 +2,6 @@
   <a-layout-sider
     breakpoint="lg"
     collapsed-width="0"
-    @collapse="onCollapse"
-    @breakpoint="onBreakpoint"
   >
     <div class="logo" :style="{ textAlign: 'center', marginTop: '10px' }">
       <a-typography-title :style="{ color: 'white' }" :level="4"
@@ -32,37 +30,23 @@
           </router-link>
         </a-menu-item>
       </a-sub-menu>
-      <a-menu-item key="4">
-        <UserOutlined />
-        <span>Account</span>
-      </a-menu-item>
+      
     </a-menu>
   </a-layout-sider>
 </template>
 <script>
 import { defineComponent, ref } from "vue";
-import { AppstoreOutlined, UserOutlined } from "@ant-design/icons-vue";
+import { AppstoreOutlined } from "@ant-design/icons-vue";
 
 export default defineComponent({
   components: {
     AppstoreOutlined,
-    UserOutlined
   },
 
   setup() {
-    const onCollapse = (collapsed, type) => {
-      console.log(collapsed, type);
-    };
-
-    const onBreakpoint = broken => {
-      console.log(broken);
-    };
-
     return {
       selectedKeys: ref(["1"]),
       openKeys: ref(["sub1"]),
-      onCollapse,
-      onBreakpoint
     };
   }
 });
