@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken')
 const config = require('../config/config')
 const maxEmailAccounts = config.MAX_EMAIL_EXISTS
 const nodeoutlook = require('./nodeoutlook')
-const cookieParser = require('cookie-parser')
 
 // MongoDB Connection
 const mongoUtil = require('../src/mongoUtil')

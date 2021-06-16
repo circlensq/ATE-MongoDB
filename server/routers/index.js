@@ -27,5 +27,6 @@ router.get('/events', verifyUserToken, IsActive, userController.userEvent)
 
 // Test route
 router.get('/tests/all', testController.getAll)
+router.get('/tests/updateData', testController.getUpdateData)
 
 module.exports = router
