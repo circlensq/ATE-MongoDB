@@ -43,7 +43,6 @@
               :style="{ marginBottom: '20px' }"
               @keypress.enter="submitLogin"
             />
-
             <a-input
               v-model:value="password"
               placeholder="password"
@@ -136,56 +135,26 @@ export default defineComponent({
           password: this.password
         }
       })
-        .then(res => {
-          this.showToastError = false;
+      .then(res => {
+        this.showToastError = false;
 
-          setTimeout(() => {
-            this.showToastSuccess = true;
-          }, 300);
+        setTimeout(() => {
+          this.showToastSuccess = true;
+        }, 300);
 
-          setTimeout(() => {
-            this.changeSpinning();
-            if (res.data.message) this.$router.push({ name: "Layout" });
-          }, 1000);
-        })
-        .catch((error) => {
-          if (error.response && error.response.status === 401) {
-            this.errorLogin = error.response.data.error;
-            this.triggerToast();
-          }
-        });
+        setTimeout(() => {
+          this.changeSpinning();
+          if (res.data.message) this.$router.push({ name: "Layout" });
+        }, 1000);
+      })
+      .catch((error) => {
+        if (error.response && error.response.status === 401) {
+          this.errorLogin = error.response.data.error;
+          this.triggerToast();
+        }
+      });
     }
   }
-
-    // const submitLogin = () => {
-    //   axios({
-    //     method: "post",
-    //     url: "/api/accounts/login",
-    //     data: {
-    //       username: formState.username,
-    //       password: formState.password
-    //     }
-    //   })
-    //     .then(res => {
-    //       showToastError.value = false;
-
-    //       setTimeout(() => {
-    //         showToastSuccess.value = true;
-    //       }, 300);
-
-    //       setTimeout(() => {
-    //         changeSpinning();
-    //         if (res.data.message) router.push({ name: "Layout" });
-    //       }, 1000);
-    //     })
-    //     .catch(function(error) {
-    //       if (error.response && error.response.status === 401) {
-    //         errorLogin.value = error.response.data.error;
-    //         triggerToast();
-    //       }
-    //     });
-    // };
-
 });
 </script>
 

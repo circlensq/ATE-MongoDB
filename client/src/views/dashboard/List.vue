@@ -1,4 +1,7 @@
 <template>
+  <a-modal :visible="modalVisible" title="Basic Modal" @ok="toggleModal">
+    
+  </a-modal>
   <a-row type="flex" justify="end">
     <a-form-item>
       <a-checkbox-group v-model:value="autoRefresh">
@@ -11,6 +14,8 @@
         :max="10000"
         :disabled="disabled"
         v-model:value="autoRefreshSeconds"
+        @focus="onFocus"
+        @blur="onBlur"
       />
       seconds
     </a-form-item>
@@ -31,9 +36,9 @@
       </template>
       <template #data_txt_filename="{ text: data_txt_filename }">
         <span v-if="data_txt_filename">
-          <a :href="data_txt_filename" target="_blank">
+          <button @click="toggleModal">
             <EyeOutlined twoToneColor="#f39c12" />
-          </a>
+          </button>
         </span>
         <span v-else>
           <EyeInvisibleOutlined />
@@ -48,9 +53,78 @@
 
 <script>
 import axios from "axios";
-
 import { defineComponent } from "vue";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons-vue";
+
+export default defineComponent({
+  components: {
+    EyeOutlined,
+    EyeInvisibleOutlined,
+  },
+  data() {
+    return {
+      data: null,
+      columns,
+      autoRefreshSeconds: 5,
+      autoRefresh: [],
+      disabled: true,
+      spinning: false,
+      autoTimeout: null,
+      modalVisible:false,
+      isOnFocus: false
+    };
+  },
+  mounted() {
+    this.fetchTests();
+  },
+  methods: {
+    async fetchTests() {
+      this.spinning = true;
+      await axios
+        .get("/api/tests/all")
+        .then(res => {
+          this.data = res.data.tests[0];
+          this.spinning = false;
+        })
+        .catch(err => {
+          console.log("error: ", err);
+        });
+    },
+    toggleModal() {
+      this.modalVisible = !this.modalVisible
+    },
+    onFocus() {
+      this.isOnFocus = true
+    },
+    onBlur() {
+      this.isOnFocus = false
+    }
+  },
+  watch: {
+    autoRefresh(newValue) {
+      if (newValue.length === 1) {
+        this.disabled = false;
+        this.reRender = true;
+
+        setTimeout(() => {
+          this.fetchTests();
+        }, this.autoRefreshSeconds * 1000);
+      } else {
+        this.disabled = true;
+      }
+    },
+    autoRefreshSeconds(newValue) {
+      if (this.isOnFocus == false && newValue == null) this.autoRefreshSeconds = 5
+    },
+    data() {
+      if (this.autoRefresh[0] === "auto") {
+        setTimeout(() => {
+          this.fetchTests();
+        }, this.autoRefreshSeconds * 1000);
+      }
+    }
+  }  
+});
 
 const columns = [
   {
@@ -140,63 +214,6 @@ const columns = [
   //   }
   // }
 ];
-
-export default defineComponent({
-  components: {
-    EyeOutlined,
-    EyeInvisibleOutlined
-  },
-  data() {
-    return {
-      data: null,
-      columns,
-      autoRefreshSeconds: 5,
-      autoRefresh: [],
-      disabled: true,
-      spinning: false,
-      autoTimeout: null
-    };
-  },
-  mounted() {
-    this.fetchTests();
-  },
-  methods: {
-    async fetchTests() {
-      this.spinning = true;
-      await axios
-        .get("/api/tests/all")
-        .then(res => {
-          this.data = res.data.tests[0];
-          this.spinning = false;
-        })
-        .catch(err => {
-          console.log("error: ", err);
-        });
-    }
-  },
-  watch: {
-    autoRefresh(newValue) {
-      if (newValue.length === 1) {
-        this.disabled = false;
-        this.reRender = true;
-
-        setTimeout(() => {
-          this.fetchTests();
-        }, this.autoRefreshSeconds * 1000);
-      } else {
-        console.log("masuk else");
-        this.disabled = true;
-      }
-    },
-    data() {
-      if (this.autoRefresh[0] === "auto") {
-        setTimeout(() => {
-          this.fetchTests();
-        }, this.autoRefreshSeconds * 1000);
-      }
-    }
-  }
-});
 </script>
 
 <style>
