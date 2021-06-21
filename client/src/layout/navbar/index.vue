@@ -20,7 +20,7 @@
                       Setting
                     </a>
                   </a-menu-item>
-                  <a-menu-item>
+                  <a-menu-item @click="logout">
                     <a rel="noopener noreferrer">
                       Logout
                     </a>
@@ -35,6 +35,15 @@
   </a-layout-header>
 </template>
 
+<script>
+export default {
+  methods: {
+    logout() {
+      this.$store.dispatch('user/logout')
+    }
+  }
+}
+</script>
 <style>
 #components-dropdown-demo-placement .ant-btn {
   margin-right: 8px;

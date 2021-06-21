@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import BaseLayout from '../layout/BaseLayout.vue'
-// import axios from 'axios'
 
 const routes = [
   {
@@ -8,10 +7,7 @@ const routes = [
     name: 'Layout',
     redirect: '/dashboard/analysis',
     component: BaseLayout,
-    // beforeEnter: (to, from) => {
-    //   // reject the navigation
-    //   return false
-    // },
+    meta: { requiresAuth: true },
     children: [
       {
         path: '/dashboard/analysis',
@@ -53,6 +49,14 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
+})
+
+router.beforeEach((to, from, next) => {
+  const loggedIn = localStorage.getItem('user')
+  if (to.matched.some(record => record.meta.requiresAuth) && !loggedIn) {
+    next('/login')
+  }
+  next()
 })
 
 export default router

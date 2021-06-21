@@ -9,7 +9,6 @@ const apiLogin = axios.create({
     }
 })
    
-
 export default {
     postLogin(user) {
         return apiLogin.post('/accounts/login', user)

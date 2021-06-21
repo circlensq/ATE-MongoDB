@@ -1,27 +1,70 @@
 <template>
   <a-modal :visible="modalVisible" title="Basic Modal" @ok="toggleModal">
-    
   </a-modal>
-  <a-row type="flex" justify="end">
-    <a-form-item>
-      <a-checkbox-group v-model:value="autoRefresh">
-        <a-checkbox value="auto" name="type">auto refresh every</a-checkbox>
-      </a-checkbox-group>
+  <a-row>
+    <a-col :span="12">
+      <a-space align="center">
+        <a-dropdown>
+          <template #overlay>
+            <a-menu>
+              <a-menu-item key="download_data" @click="downloadData"
+                >Download Data(.txt)</a-menu-item
+              >
+              <a-menu-item key="download_log">Download Log(.txt)</a-menu-item>
+              <a-menu-item key="download_comport"
+                >Download Comport(.txt)</a-menu-item
+              >
+              <a-menu-item key="download_telnet"
+                >Download Telnet(.txt)</a-menu-item
+              >
+              <a-tooltip title="Danger!" color="red" placement="right">
+                <a-menu-item key="delete">Delete</a-menu-item>
+              </a-tooltip>
+            </a-menu>
+          </template>
+          <a-button v-if="hasSelected" :disabled="!hasSelected">
+            Actions
+            <DownOutlined />
+          </a-button>
+        </a-dropdown>
+        <span style="margin-left: 8px">
+          <template v-if="hasSelected">
+            {{ `Selected ${selectedRowKeys.length} items` }}
+          </template>
+        </span>
+      </a-space>
+    </a-col>
+    <a-col :span="12">
+      <a-row type="flex" justify="end">
+        <a-space align="center">
+          <a-form-item>
+            <a-checkbox-group v-model:value="autoRefresh">
+              <a-checkbox value="auto" name="type"
+                >auto refresh every</a-checkbox
+              >
+            </a-checkbox-group>
 
-      <a-input-number
-        size="small"
-        :min="1"
-        :max="10000"
-        :disabled="disabled"
-        v-model:value="autoRefreshSeconds"
-        @focus="onFocus"
-        @blur="onBlur"
-      />
-      seconds
-    </a-form-item>
+            <a-input-number
+              size="small"
+              :min="1"
+              :max="10000"
+              :disabled="disabled"
+              v-model:value="autoRefreshSeconds"
+              @focus="onFocus"
+              @blur="onBlur"
+            />
+            seconds
+          </a-form-item>
+        </a-space>
+      </a-row>
+    </a-col>
   </a-row>
   <a-spin tip="Loading..." :spinning="spinning">
     <a-table
+      :row-selection="{
+        selectedRowKeys: selectedRowKeys,
+        onChange: onSelectChange
+      }"
       :columns="columns"
       :data-source="data"
       :scroll="{ x: 1500, y: 300 }"
@@ -39,7 +82,11 @@
       </template>
       <template #data_txt_filename="{ text: data_txt_filename }">
         <span v-if="data_txt_filename">
-          <a-button type="link" @click="toggleModal">
+          <a-button
+            type="link"
+            @click="toggleModal"
+            :href="data_txt_filename"
+          >
             <EyeOutlined twoToneColor="#f39c12" />
           </a-button>
         </span>
@@ -90,13 +137,18 @@
 <script>
 import axios from "axios";
 import { defineComponent } from "vue";
-import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons-vue";
-import moment from 'moment'
+import {
+  EyeOutlined,
+  EyeInvisibleOutlined,
+  DownOutlined
+} from "@ant-design/icons-vue";
+import moment from "moment";
 
 export default defineComponent({
   components: {
     EyeOutlined,
     EyeInvisibleOutlined,
+    DownOutlined
   },
   data() {
     return {
@@ -107,8 +159,9 @@ export default defineComponent({
       disabled: true,
       spinning: false,
       autoTimeout: null,
-      modalVisible:false,
-      isOnFocus: false
+      modalVisible: false,
+      isOnFocus: false,
+      selectedRowKeys: []
     };
   },
   mounted() {
@@ -128,16 +181,32 @@ export default defineComponent({
         });
     },
     toggleModal() {
-      this.modalVisible = !this.modalVisible
+      this.modalVisible = !this.modalVisible;
     },
     onFocus() {
-      this.isOnFocus = true
+      this.isOnFocus = true;
     },
     onBlur() {
-      this.isOnFocus = false
+      this.isOnFocus = false;
     },
     testDateFormatted(test_date) {
-      return moment(test_date).format('YYYY/MM/DD hh:mm:ss')
+      return moment(test_date).format("YYYY/MM/DD hh:mm:ss");
+    },
+    onSelectChange(selectedRowKeys) {
+      console.log("selectedRowKeys changed: ", selectedRowKeys);
+      this.selectedRowKeys = selectedRowKeys;
+    },
+    async downloadData() {
+      await axios
+        .get("/api/file/download")
+        .catch(err => {
+          console.log("error: ", err);
+        });
+    }
+  },
+  computed: {
+    hasSelected() {
+      return this.selectedRowKeys.length > 0;
     }
   },
   watch: {
@@ -154,7 +223,8 @@ export default defineComponent({
       }
     },
     autoRefreshSeconds(newValue) {
-      if (this.isOnFocus == false && newValue == null) this.autoRefreshSeconds = 5
+      if (this.isOnFocus == false && newValue == null)
+        this.autoRefreshSeconds = 5;
     },
     data() {
       if (this.autoRefresh[0] === "auto") {
@@ -163,7 +233,7 @@ export default defineComponent({
         }, this.autoRefreshSeconds * 1000);
       }
     }
-  }  
+  }
 });
 
 const columns = [
@@ -216,7 +286,6 @@ const columns = [
     key: "log_txt_filename",
     width: 150,
     slots: { customRender: "log_txt_filename" }
-
   },
   {
     title: "Comport(.txt)",

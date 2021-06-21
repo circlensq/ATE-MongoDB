@@ -27,6 +27,7 @@ import {
     Table,
     Tabs,
     Tag,
+    Tooltip,
     Typography,
 } from "ant-design-vue";
 
@@ -57,6 +58,7 @@ const components = [
     Table,
     Tabs,
     Tag,
+    Tooltip,
     Typography
 ]
 

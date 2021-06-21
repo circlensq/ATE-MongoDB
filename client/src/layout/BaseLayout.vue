@@ -25,6 +25,9 @@ import Navbar from './navbar/index.vue'
 import Sidebar from './sidebar/index.vue'
 
 import { defineComponent, ref } from "vue";
+
+import { authComputed } from '@/vuex/helpers'
+
 export default defineComponent({
   components: {
     Footer,
@@ -48,6 +51,9 @@ export default defineComponent({
       onBreakpoint,
     };
   },
+  computed: {
+    ...authComputed
+  }
 });
 </script>
 <style>

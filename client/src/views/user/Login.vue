@@ -92,7 +92,6 @@
 
 <script>
 import { defineComponent } from "vue";
-import axios from 'axios'
 
 export default defineComponent({
   data() {
@@ -127,15 +126,19 @@ export default defineComponent({
       }
     },
     submitLogin () {
-       axios({
-        method: "post",
-        url: "/api/accounts/login",
-        data: {
-          username: this.username,
-          password: this.password
-        }
+      //  axios({
+      //   method: "post",
+      //   url: "/api/accounts/login",
+      //   data: {
+      //     username: this.username,
+      //     password: this.password
+      //   }
+      // })
+      this.$store.dispatch('user/login', {
+        username: this.username,
+        password: this.password
       })
-      .then(res => {
+      .then(() => {
         this.showToastError = false;
 
         setTimeout(() => {
@@ -144,7 +147,7 @@ export default defineComponent({
 
         setTimeout(() => {
           this.changeSpinning();
-          if (res.data.message) this.$router.push({ name: "Layout" });
+          if (this.$store.state.user.auth.message) this.$router.push({ name: "Layout" });
         }, 1000);
       })
       .catch((error) => {
