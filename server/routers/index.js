@@ -4,6 +4,7 @@ const { verifyUserToken, IsSuperuser, IsStaff, IsActive } = require("../middlewa
 const userController = require('../controllers/user')
 const dataController = require('../controllers/data')
 const fileController = require('../controllers/file')
+let mime = require('mime');
 
 // Register a new User
 router.post('/accounts/register', userController.register)
@@ -31,6 +32,9 @@ router.get('/tests/all', dataController.getAll)
 router.get('/tests/updateData', dataController.getUpdateData)
 
 // Upload File API route
-router.post('/upload/file', fileController.upload)
+router.post('/file/upload', fileController.upload)
+
+router.post('/file/download/:data', fileController.download)
+router.get('/file/download/:name', fileController.downloadSingle)
 
 module.exports = router

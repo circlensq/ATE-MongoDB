@@ -23,6 +23,7 @@ mongoUtil.connectToServer(function (err, client) {
     
     const authRoute = require('../routers/index')
 
+    app.use(express.static('media/upload/docs'))
     // Route Middlewares
     app.use('/api', authRoute)
 
