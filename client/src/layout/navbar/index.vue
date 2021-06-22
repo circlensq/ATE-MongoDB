@@ -15,11 +15,6 @@
               </a-avatar>
               <template #overlay>
                 <a-menu>
-                  <a-menu-item>
-                    <a rel="noopener noreferrer">
-                      Setting
-                    </a>
-                  </a-menu-item>
                   <a-menu-item @click="logout">
                     <a rel="noopener noreferrer">
                       Logout

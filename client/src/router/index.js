@@ -5,16 +5,16 @@ const routes = [
   {
     path: '/',
     name: 'Layout',
-    redirect: '/dashboard/analysis',
+    redirect: '/dashboard/list',
     component: BaseLayout,
     meta: { requiresAuth: true },
     children: [
-      {
-        path: '/dashboard/analysis',
-        component: () => import('@/views/Home.vue'),
-        name: 'Analysis',
-        meta: { title: 'Analysis', affix: true}
-      },
+      // {
+      //   path: '/dashboard/analysis',
+      //   component: () => import('@/views/Home.vue'),
+      //   name: 'Analysis',
+      //   meta: { title: 'Analysis', affix: true}
+      // },
       {
         path: '/dashboard/list',
         component: () => import('@/views/dashboard/List.vue'),

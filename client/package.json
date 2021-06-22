@@ -11,8 +11,10 @@
   "dependencies": {
     "ant-design-vue": "^2.1.2",
     "axios": "^0.21.1",
+    "b64-to-blob": "^1.2.19",
     "core-js": "^3.6.5",
     "es6-promise": "^4.2.8",
+    "file-saver": "^2.0.5",
     "moment": "^2.29.1",
     "papaparse": "^5.3.1",
     "vue": "^3.0.9",

@@ -15,16 +15,14 @@
       v-model:openKeys="openKeys"
       :style="{ height: '100%', borderRight: 0 }"
     >
-      <a-sub-menu key="sub1">
-        <template #title>
+      <a-sub-menu key="dashboard">
+      <template #title>
           <span class="nav-text">
             <AppstoreOutlined />
             Dashboard
           </span>
         </template>
-        <a-menu-item key="1">Analysis</a-menu-item>
-        <a-menu-item key="2">Monitor</a-menu-item>
-        <a-menu-item key="3">
+        <a-menu-item key="dashboard-list">
           <router-link :to="{ name: 'List' }">
             List
           </router-link>
@@ -45,8 +43,8 @@ export default defineComponent({
 
   setup() {
     return {
-      selectedKeys: ref(["1"]),
-      openKeys: ref(["sub1"]),
+      selectedKeys: ref(["dashboard-list"]),
+      openKeys: ref(["dashboard"]),
     };
   }
 });

@@ -1,5 +1,12 @@
 <template>
-  <a-modal :visible="modalVisible" title="Basic Modal" @ok="toggleModal">
+  <a-modal
+    cancel-text="Cancel"
+    ok-text="Download"
+    :visible="modalVisible"
+    title="Basic Modal"
+    @ok="downloadSingle"
+    @cancel="toggleModal"
+  >
   </a-modal>
   <a-row>
     <a-col :span="12">
@@ -7,14 +14,16 @@
         <a-dropdown>
           <template #overlay>
             <a-menu>
-              <a-menu-item key="download_data" @click="downloadData"
+              <a-menu-item key="download_data" @click="download('data')"
                 >Download Data(.txt)</a-menu-item
               >
-              <a-menu-item key="download_log">Download Log(.txt)</a-menu-item>
-              <a-menu-item key="download_comport"
+              <a-menu-item key="download_log" @click="download('log')"
+                >Download Log(.txt)</a-menu-item
+              >
+              <a-menu-item key="download_comport" @click="download('comport')"
                 >Download Comport(.txt)</a-menu-item
               >
-              <a-menu-item key="download_telnet"
+              <a-menu-item key="download_telnet" @click="download('telnet')"
                 >Download Telnet(.txt)</a-menu-item
               >
               <a-tooltip title="Danger!" color="red" placement="right">
@@ -82,46 +91,50 @@
       </template>
       <template #data_txt_filename="{ text: data_txt_filename }">
         <span v-if="data_txt_filename">
-          <a-button
-            type="link"
-            @click="toggleModal"
-            :href="data_txt_filename"
-          >
+          <a-button type="link" @click="toggleModal(data_txt_filename)">
             <EyeOutlined twoToneColor="#f39c12" />
           </a-button>
         </span>
         <span v-else>
-          <EyeInvisibleOutlined />
+          <a-button type="link" style="color: black; cursor: not-allowed">
+            <EyeInvisibleOutlined />
+          </a-button>
         </span>
       </template>
       <template #log_txt_filename="{ text: log_txt_filename }">
         <span v-if="log_txt_filename">
-          <a-button type="link" @click="toggleModal">
+          <a-button type="link" @click="toggleModal(log_txt_filename)">
             <EyeOutlined twoToneColor="#f39c12" />
           </a-button>
         </span>
         <span v-else>
-          <EyeInvisibleOutlined />
+          <a-button type="link" style="color: black; cursor: not-allowed; ">
+            <EyeInvisibleOutlined />
+          </a-button>
         </span>
       </template>
       <template #comport_txt_filename="{ text: comport_txt_filename }">
         <span v-if="comport_txt_filename">
-          <a-button type="link" @click="toggleModal">
+          <a-button type="link" @click="toggleModal(comport_txt_filename)">
             <EyeOutlined twoToneColor="#f39c12" />
           </a-button>
         </span>
         <span v-else>
-          <EyeInvisibleOutlined />
+          <a-button type="link" style="color: black; cursor: not-allowed;">
+            <EyeInvisibleOutlined />
+          </a-button>
         </span>
       </template>
       <template #telnet_txt_filename="{ text: telnet_txt_filename }">
         <span v-if="telnet_txt_filename">
-          <a-button type="link" @click="toggleModal">
+          <a-button type="link" @click="toggleModal(telnet_txt_filename)">
             <EyeOutlined twoToneColor="#f39c12" />
           </a-button>
         </span>
         <span v-else>
-          <EyeInvisibleOutlined />
+          <a-button type="link" style="color: black; cursor: not-allowed">
+            <EyeInvisibleOutlined />
+          </a-button>
         </span>
       </template>
       <template #added_time="{ text: added_time }">
@@ -143,6 +156,8 @@ import {
   DownOutlined
 } from "@ant-design/icons-vue";
 import moment from "moment";
+import b64ToBlob from "b64-to-blob";
+// import fileSaver from "file-saver";
 
 export default defineComponent({
   components: {
@@ -161,7 +176,8 @@ export default defineComponent({
       autoTimeout: null,
       modalVisible: false,
       isOnFocus: false,
-      selectedRowKeys: []
+      selectedRowKeys: [],
+      modalDownloadLink: null
     };
   },
   mounted() {
@@ -180,8 +196,9 @@ export default defineComponent({
           console.log("error: ", err);
         });
     },
-    toggleModal() {
+    toggleModal(data_txt_filename) {
       this.modalVisible = !this.modalVisible;
+      this.modalDownloadLink = data_txt_filename;
     },
     onFocus() {
       this.isOnFocus = true;
@@ -196,9 +213,59 @@ export default defineComponent({
       console.log("selectedRowKeys changed: ", selectedRowKeys);
       this.selectedRowKeys = selectedRowKeys;
     },
-    async downloadData() {
-      await axios
-        .get("/api/file/download")
+    async download(dataType) {
+      let dataUrl = "";
+
+      if (dataType === "data") dataUrl = "data";
+      else if (dataType === "log") dataUrl = "log";
+      else if (dataType === "comport") dataUrl = "comport";
+      else if (dataType === "telnet") dataUrl = "telnet";
+
+      await axios({
+        method: "post",
+        url: `/api/file/download/${dataUrl}`,
+        data: {
+          files: this.selectedRowKeys
+        }
+      })
+        .then(res => {
+          const zipAsBase64 = res.data.zip64;
+          const blob = b64ToBlob(zipAsBase64, "application/zip");
+          let fileUrl = window.URL.createObjectURL(new Blob([blob]));
+          let fileLink = document.createElement("a");
+          fileLink.href = fileUrl;
+          fileLink.setAttribute("download", `${dataUrl}_download.zip`);
+          document.body.appendChild(fileLink);
+          fileLink.click();
+        })
+        .catch(err => {
+          console.log("error: ", err);
+        });
+    },
+    async downloadSingle() {
+      // modalDownloadLink = .\\Data\\Dotboard\2021_06_21\DB1111111111_202106210830.txt
+      let convertLink = this.modalDownloadLink
+        .replace(".\\\\", "")
+        .replace("\\\\", "-")
+        .replace(/\\/g, "-");
+      // convertLink = Data-Dotboard-2021_06_21-DB1111111111_202106210830.txt
+
+      let convertLinkSplit = convertLink.split("-");
+      let fileName = convertLinkSplit[convertLinkSplit.length - 1];
+
+      await axios({
+        method: "get",
+        url: "/api/file/download/" + convertLink,
+        responseType: "blob"
+      })
+        .then(res => {
+          let fileUrl = window.URL.createObjectURL(new Blob([res.data]));
+          let fileLink = document.createElement("a");
+          fileLink.href = fileUrl;
+          fileLink.setAttribute("download", fileName);
+          document.body.appendChild(fileLink);
+          fileLink.click();
+        })
         .catch(err => {
           console.log("error: ", err);
         });
@@ -316,16 +383,6 @@ const columns = [
     fixed: "right",
     slots: { customRender: "result" }
   }
-
-  // {
-  //   title: "Test Time",
-  //   key: "test_time_minutes",
-  //   fixed: "right",
-  //   width: 100,
-  //   slots: {
-  //     customRender: "action"
-  //   }
-  // }
 ];
 </script>
 
