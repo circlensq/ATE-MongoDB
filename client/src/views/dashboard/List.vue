@@ -12,8 +12,8 @@
     </span>
     <i v-else>Loading File...</i>
   </a-modal>
-  <a-row>
-    <a-col :span="12">
+  <a-row style="margin-bottom: 10px">
+    <a-col :span="6">
       <a-space align="center">
         <a-dropdown>
           <template #overlay>
@@ -47,10 +47,15 @@
         </span>
       </a-space>
     </a-col>
-    <a-col :span="12">
+    <a-col :span="18">
       <a-row type="flex" justify="end">
-        <a-space align="center">
-          <a-form-item>
+        <a-space align="center" size="small">
+          <a-input-search
+            v-model:value="searchBar"
+            placeholder="search with SN or Mac Address"
+          />
+          <a-divider type="vertical" />
+          <a-form-item style="margin-bottom: 0">
             <a-checkbox-group v-model:value="autoRefresh">
               <a-checkbox value="auto" name="type"
                 >auto refresh every</a-checkbox
@@ -80,8 +85,9 @@
       }"
       :columns="columns"
       :data-source="data"
-      :scroll="{ x: 1500, y: 300 }"
+      :scroll="{ x: 1500, y: 500 }"
       :rowKey="(data) => data._id"
+      :pagination="{ pageSize: 10 }"
     >
       <template #test_date="{ text: test_date }">
         {{ testDateFormatted(test_date) }}
@@ -184,6 +190,7 @@ export default defineComponent({
       modalDownloadLink: null,
       modalTitle: null,
       contentFile: null,
+      searchBar: null,
     };
   },
   mounted() {
@@ -195,7 +202,16 @@ export default defineComponent({
       await axios
         .get("/api/tests/all")
         .then((res) => {
-          this.data = res.data.tests[0];
+          if (this.data != null) {
+            let difference = this.data.length - res.data.tests[0].length;
+            this.data = res.data.tests[0];
+            if (difference) {
+              // this.data.push(res.data.tests[0].slice(difference)); // for FAIL notification
+              this.data = res.data.tests[0];
+            }
+          } else {
+            this.data = res.data.tests[0];
+          }
           this.spinning = false;
         })
         .catch((err) => {
@@ -237,14 +253,11 @@ export default defineComponent({
       this.isOnFocus = false;
     },
     testDateFormatted(test_date) {
-      return moment(test_date).format("YYYY/MM/DD hh:mm:ss");
+      return moment(test_date).format("YYYY/MM/DD HH:mm:ss");
     },
     onSelectChange(selectedRowKeys) {
       console.log("selectedRowKeys changed: ", selectedRowKeys);
       this.selectedRowKeys = selectedRowKeys;
-    },
-    async readFile() {
-      // modalDownloadLink = .\\Data\\Dotboard\2021_06_21\DB1111111111_202106210830.txt
     },
     async download(dataType) {
       let dataUrl = "";
@@ -306,6 +319,7 @@ export default defineComponent({
           console.log("error: ", err);
         });
     },
+    async handleResultSearch() {},
   },
   computed: {
     hasSelected() {
@@ -335,6 +349,25 @@ export default defineComponent({
           this.fetchTests();
         }, this.autoRefreshSeconds * 1000);
       }
+    },
+    searchBar(newValue) {
+      setTimeout(async () => {
+        if (newValue != "") {
+          this.spinning = true;
+          await axios
+            .get(`/api/tests/search/${newValue}`)
+            .then((res) => {
+              this.data = res.data.tests[0];
+              this.spinning = false;
+            })
+            .catch((err) => {
+              console.log("error: ", err);
+            });
+        } else {
+          this.data = null;
+          this.fetchTests();
+        }
+      }, 1000);
     },
   },
 });

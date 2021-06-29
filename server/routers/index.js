@@ -39,11 +39,13 @@ router.get('/events', verifyUserToken, IsActive, userController.userEvent)
 // Test Data route
 router.get('/tests/all', dataController.getAll)
 router.get('/tests/updateData', dataController.getUpdateData)
+router.get('/tests/search/:query', dataController.searchTest)
 
 // Upload File API route
 router.post('/file/upload', verifyUserToken, IsStaff, fileController.upload)
-
 router.post('/file/download/:data', fileController.download)
 router.get('/file/download/:name', fileController.downloadSingle) 
+
+// Search Data route
 
 module.exports = router

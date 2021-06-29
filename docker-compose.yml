@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  server:
+    restart: always
+    build: ./server
+    container_name: server
+    expose:
+      - "8080"
+    volumes: 
+      - /home/ate/dashboard-v2.0-data/nodejs/data/s-media:/media
+    env_file: .env
+   
+  client:
+    restart: always
+    build: ./client
+    container_name: client
+    expose:
+      - "80"
+    env_file: .env
+    
+  nginx-server:
+    restart: always
+    build: ./nginx-server/
+    container_name: nginx-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - /home/ate/dashboard-v2.0-data/nodejs/data/s-media:/media
+    links:
+      - server:server
+
+volumes:
+  s-media:

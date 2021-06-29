@@ -1,5 +1,5 @@
 <template>
   <a-layout-footer style="text-align: center">
-    Ant Design ©2018 Created by Ant UED
+    ATE Dashboard ©2021 
   </a-layout-footer>
 </template>
