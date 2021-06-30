@@ -12,19 +12,25 @@ const routes = [
       {
         path: '/dashboard/list',
         component: () => import('@/views/dashboard/List.vue'),
-        name: 'List',
+        name: 'dashboard-list',
         meta: { title: 'Test List', affix: true}
+      },
+      {
+        path: '/project/create',
+        component: () => import('@/views/project/Create.vue'),
+        name: 'project-create',
+        meta: { title: 'Create New Project', affix: true}
       },
     ]
   },
   {
     path: '/login',
-    name: 'Login',
+    name: 'login',
     component: () => import('@/views/user/Login.vue'),
   },
   {
     path: '/register',
-    name: 'Register',
+    name: 'register',
     component: () => import('@/views/user/Register.vue'),
   },
   // {
@@ -34,7 +40,7 @@ const routes = [
   // },
   {
     path: '/confirm',
-    name: 'ConfirmAccount',
+    name: 'confirm-account',
     component: () => import('@/views/user/Confirm.vue'),
   },
   

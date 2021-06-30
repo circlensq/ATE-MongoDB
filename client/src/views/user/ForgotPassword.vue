@@ -31,7 +31,7 @@
           >
             <a-col>
               <a-typography-link href="#" target="_blank">
-                <router-link :to="{ name: 'Login' }">
+                <router-link :to="{ name: 'login' }">
                   Back to login?
                 </router-link>
               </a-typography-link>

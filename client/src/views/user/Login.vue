@@ -77,7 +77,7 @@
               <a-col>
                 Don't have account?
                 <a-typography-link href="#" target="_blank">
-                  <router-link :to="{ name: 'Register' }">
+                  <router-link :to="{ name: 'register' }">
                     Register now
                   </router-link>
                 </a-typography-link>
@@ -126,14 +126,6 @@ export default defineComponent({
       }
     },
     submitLogin () {
-      //  axios({
-      //   method: "post",
-      //   url: "/api/accounts/login",
-      //   data: {
-      //     username: this.username,
-      //     password: this.password
-      //   }
-      // })
       this.$store.dispatch('user/login', {
         username: this.username,
         password: this.password

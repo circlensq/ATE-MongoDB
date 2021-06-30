@@ -7,6 +7,7 @@ const { verifyUserToken, IsSuperuser, IsStaff, IsActive } = require("../middlewa
 const userController = require('../controllers/user')
 const dataController = require('../controllers/data')
 const fileController = require('../controllers/file')
+const projectController = require('../controllers/project')
 
 // Send CSRF token for session
 router.get('/getcsrftoken', csrfProtection, function (req, res) {
@@ -46,6 +47,7 @@ router.post('/file/upload', verifyUserToken, IsStaff, fileController.upload)
 router.post('/file/download/:data', fileController.download)
 router.get('/file/download/:name', fileController.downloadSingle) 
 
-// Search Data route
+// Project Data route
+router.post('/project/create',  projectController.createProject)
 
 module.exports = router

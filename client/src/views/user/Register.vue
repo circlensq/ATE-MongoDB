@@ -76,7 +76,7 @@
               </a-col>
               <a-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
                 <a-typography-link href="#" target="_blank">
-                  <router-link :to="{ name: 'Login' }">
+                  <router-link :to="{ name: 'login' }">
                     Already have an account?
                   </router-link>
                 </a-typography-link>
