@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  mongodb_3:
+    restart: unless-stopped
+    image : mongo:3.6 # MongoDB v3.6
+    container_name: mongodb_3.6
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: jzate
+      MONGO_INITDB_ROOT_PASSWORD: jzhipster
+      MONGO_INITDB_DATABASE: ate_mongodb
+    volumes: # Mounts host paths or named volumes, specified as sub-options to a service.
+      - /home/richard/mongodb_3/:/data/db
+    command: [--auth]
+    ports:
+      - 27017:27017
+
+volumes:
+  mongodb_data_container:

@@ -1,5 +1,4 @@
 import UserService from '@/services/UserService'
-import axios from 'axios'
 
 export const namespaced = true
 
@@ -13,8 +12,7 @@ export const state = {
 export const mutations = {
     SET_USER_DATA(state, userData){
         state.user = userData
-        localStorage.setItem('user', JSON.stringify(userData))
-        axios.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`
+        localStorage.setItem('user', userData)
     },
     LOGOUT (state) {
         state.user = null

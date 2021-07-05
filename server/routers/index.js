@@ -48,6 +48,6 @@ router.post('/file/download/:data', fileController.download)
 router.get('/file/download/:name', fileController.downloadSingle) 
 
 // Project Data route
-router.post('/project/create',  projectController.createProject)
+router.post('/project/create',  verifyUserToken, IsStaff, projectController.createProject)
 
 module.exports = router

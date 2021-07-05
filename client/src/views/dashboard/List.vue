@@ -50,11 +50,6 @@
     <a-col :span="18">
       <a-row type="flex" justify="end">
         <a-space align="center" size="small">
-          <a-input-search
-            v-model:value="searchBar"
-            placeholder="search with SN or Mac Address"
-          />
-          <a-divider type="vertical" />
           <a-form-item style="margin-bottom: 0">
             <a-checkbox-group v-model:value="autoRefresh">
               <a-checkbox value="auto" name="type"
@@ -89,69 +84,104 @@
       :rowKey="(data) => data._id"
       :pagination="{ pageSize: 10 }"
     >
-      <template #test_date="{ text: test_date }">
-        {{ testDateFormatted(test_date) }}
+      <template
+        #filterDropdown="{
+          setSelectedKeys,
+          selectedKeys,
+          confirm,
+          clearFilters,
+          column,
+        }"
+      >
+        <div style="padding: 8px">
+          <a-input
+            ref="searchInput"
+            :placeholder="`Search ${column.dataIndex}`"
+            :value="selectedKeys[0]"
+            style="width: 188px; margin-bottom: 8px; display: block"
+            @change="
+              (e) => setSelectedKeys(e.target.value ? [e.target.value] : [])
+            "
+            @pressEnter="handleSearch(selectedKeys, confirm, column.dataIndex)"
+          />
+          <a-button
+            type="primary"
+            size="small"
+            style="width: 90px; margin-right: 8px"
+            @click="handleSearch(selectedKeys, confirm, column.dataIndex)"
+          >
+            <template #icon><SearchOutlined /></template>
+            Search
+          </a-button>
+          <a-button
+            size="small"
+            style="width: 90px"
+            @click="handleReset(clearFilters)"
+          >
+            Reset
+          </a-button>
+        </div>
       </template>
-      <template #result="{ text: result }">
-        <span>
-          <a-tag :color="result === 'PASS' ? '#0be881' : '#ff4d4f'">
-            {{ result.toUpperCase() }}
-          </a-tag>
-        </span>
+      <template #filterIcon="filtered">
+        <search-outlined :style="{ color: filtered ? '#108ee9' : undefined }" />
       </template>
-      <template #data_txt_filename="{ text: data_txt_filename }">
-        <span v-if="data_txt_filename">
-          <a-button type="link" @click="toggleModal(data_txt_filename)">
-            <EyeOutlined twoToneColor="#f39c12" />
-          </a-button>
+      <template #customRender="{ text, column }">
+        <span v-if="searchText && searchedColumn === column.dataIndex">
+          <template
+            v-for="(fragment, i) in text
+              .toString()
+              .split(new RegExp(`(?<=${searchText})|(?=${searchText})`, 'i'))"
+          >
+            <mark
+              v-if="fragment.toLowerCase() === searchText.toLowerCase()"
+              class="highlight"
+              :key="i"
+            >
+              {{ fragment }}
+            </mark>
+            <template v-else>{{ fragment }}</template>
+          </template>
         </span>
-        <span v-else>
-          <a-button type="link" style="color: black; cursor: not-allowed">
-            <EyeInvisibleOutlined />
-          </a-button>
-        </span>
-      </template>
-      <template #log_txt_filename="{ text: log_txt_filename }">
-        <span v-if="log_txt_filename">
-          <a-button type="link" @click="toggleModal(log_txt_filename)">
-            <EyeOutlined twoToneColor="#f39c12" />
-          </a-button>
-        </span>
-        <span v-else>
-          <a-button type="link" style="color: black; cursor: not-allowed">
-            <EyeInvisibleOutlined />
-          </a-button>
-        </span>
-      </template>
-      <template #comport_txt_filename="{ text: comport_txt_filename }">
-        <span v-if="comport_txt_filename">
-          <a-button type="link" @click="toggleModal(comport_txt_filename)">
-            <EyeOutlined twoToneColor="#f39c12" />
-          </a-button>
-        </span>
-        <span v-else>
-          <a-button type="link" style="color: black; cursor: not-allowed">
-            <EyeInvisibleOutlined />
-          </a-button>
-        </span>
-      </template>
-      <template #telnet_txt_filename="{ text: telnet_txt_filename }">
-        <span v-if="telnet_txt_filename">
-          <a-button type="link" @click="toggleModal(telnet_txt_filename)">
-            <EyeOutlined twoToneColor="#f39c12" />
-          </a-button>
-        </span>
-        <span v-else>
-          <a-button type="link" style="color: black; cursor: not-allowed">
-            <EyeInvisibleOutlined />
-          </a-button>
-        </span>
-      </template>
-      <template #added_time="{ text: added_time }">
-        {{ testDateFormatted(added_time) }}
-      </template>
-      <template #action>
-        <a>action</a>
+        <template v-else-if="column.dataIndex == 'test_date'">
+          {{ testDateFormatted(text) }}
+        </template>
+        <template v-else-if="column.dataIndex == 'error_code'">
+          <span v-if="text === '0' ? '' : text">
+            {{ text }}
+          </span>
+        </template>
+        <template v-else-if="column.dataIndex == 'added_time'">
+          {{ testDateFormatted(text) }}
+        </template>
+        <template
+          v-else-if="
+            column.dataIndex == 'data_txt_filename' ||
+            column.dataIndex == 'log_txt_filename' ||
+            column.dataIndex == 'comport_txt_filename' ||
+            column.dataIndex == 'telnet_txt_filename'
+          "
+        >
+          <span v-if="text">
+            <a-button type="link" @click="toggleModal(text)">
+              <EyeOutlined twoToneColor="#f39c12" />
+            </a-button>
+          </span>
+          <span v-else>
+            <a-button type="link" style="color: black; cursor: not-allowed">
+              <EyeInvisibleOutlined />
+            </a-button>
+          </span>
+        </template>
+        <template v-else-if="column.dataIndex == 'result'">
+          <span>
+            <a-tag :color="text === 'PASS' ? '#0be881' : '#ff4d4f'">
+              {{ text.toUpperCase() }}
+            </a-tag>
+          </span>
+        </template>
+        <template v-else>
+          {{ text }}
+        </template>
       </template>
     </a-table>
   </a-spin>
@@ -159,26 +189,192 @@
 
 <script>
 import axios from "axios";
+import debounce from "debounce";
 import { defineComponent } from "vue";
 import {
-  EyeOutlined,
-  EyeInvisibleOutlined,
   DownOutlined,
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  SearchOutlined,
 } from "@ant-design/icons-vue";
 import moment from "moment";
 import b64ToBlob from "b64-to-blob";
-// import fileSaver from "file-saver";
 
 export default defineComponent({
   components: {
     EyeOutlined,
     EyeInvisibleOutlined,
     DownOutlined,
+    SearchOutlined,
   },
   data() {
     return {
+      searchText: "",
+      searchColumn: "",
       data: null,
-      columns,
+      columns: [
+        {
+          width: 120,
+          title: "Test Date",
+          dataIndex: "test_date",
+          key: "test_date",
+          fixed: "left",
+          slots: {
+            customRender: "customRender",
+          },
+        },
+        {
+          title: "Serial Number",
+          width: 150,
+          dataIndex: "serial_number",
+          key: "serial_number",
+          fixed: "left",
+          slots: {
+            filterDropdown: "filterDropdown",
+            filterIcon: "filterIcon",
+            customRender: "customRender",
+          },
+          onFilter: (value, record) =>
+            record.serial_number
+              .toString()
+              .toLowerCase()
+              .includes(value.toLowerCase()),
+          onFilterDropdownVisibleChange: (visible) => {
+            if (visible) {
+              console.log(visible);
+            }
+          },
+        },
+        {
+          title: "Mac Address",
+          dataIndex: "mac_address",
+          key: "mac_address",
+          width: 150,
+          slots: {
+            filterDropdown: "filterDropdown",
+            filterIcon: "filterIcon",
+            customRender: "customRender",
+          },
+          onFilter: (value, record) =>
+            record.mac_address
+              .toString()
+              .toLowerCase()
+              .includes(value.toLowerCase()),
+          onFilterDropdownVisibleChange: (visible) => {
+            if (visible) {
+              console.log(visible);
+            }
+          },
+        },
+        {
+          title: "Test Part",
+          dataIndex: "test_station",
+          key: "test_station",
+          width: 150,
+          slots: {
+            filterDropdown: "filterDropdown",
+            filterIcon: "filterIcon",
+            customRender: "customRender",
+          },
+          onFilter: (value, record) =>
+            record.test_station
+              .toString()
+              .toLowerCase()
+              .includes(value.toLowerCase()),
+          onFilterDropdownVisibleChange: (visible) => {
+            if (visible) {
+              console.log(visible);
+            }
+          },
+        },
+        {
+          title: "Test Time (minutes)",
+          dataIndex: "test_time_minutes",
+          key: "test_time_minutes",
+          width: 100,
+          slots: {
+            customRender: "customRender",
+          },
+        },
+        {
+          title: "Error Code",
+          dataIndex: "error_code",
+          key: "error_code",
+          width: 100,
+          slots: {
+            filterDropdown: "filterDropdown",
+            filterIcon: "filterIcon",
+            customRender: "customRender",
+          },
+          onFilter: (value, record) =>
+            record.error_code
+              .toString()
+              .toLowerCase()
+              .includes(value.toLowerCase()),
+          onFilterDropdownVisibleChange: (visible) => {
+            if (visible) {
+              console.log(visible);
+            }
+          },
+        },
+        {
+          title: "Data(.txt)",
+          dataIndex: "data_txt_filename",
+          key: "data_txt_filename",
+          width: 150,
+          slots: { customRender: "customRender" },
+        },
+        {
+          title: "Log(.txt)",
+          dataIndex: "log_txt_filename",
+          key: "log_txt_filename",
+          width: 150,
+          slots: { customRender: "customRender" },
+        },
+        {
+          title: "Comport(.txt)",
+          dataIndex: "comport_txt_filename",
+          key: "comport_txt_filename",
+          width: 150,
+          slots: { customRender: "customRender" },
+        },
+        {
+          title: "Telnet(.txt)",
+          dataIndex: "telnet_txt_filename",
+          key: "telnet_txt_filename",
+          width: 150,
+          slots: { customRender: "customRender" },
+        },
+        {
+          title: "Added Time",
+          dataIndex: "added_time",
+          key: "added_time",
+          width: 120,
+          slots: { customRender: "customRender" },
+        },
+        {
+          title: "Result",
+          dataIndex: "result",
+          key: "result",
+          width: 100,
+          fixed: "right",
+          slots: {
+            filterDropdown: "filterDropdown",
+            filterIcon: "filterIcon",
+            customRender: "customRender",
+          },
+          onFilter: (value, record) =>
+            record.result
+              .toString()
+              .toLowerCase()
+              .includes(value.toLowerCase()),
+          onFilterDropdownVisibleChange: (visible) => {
+            if (visible) {
+              console.log(visible);
+            }
+          },
+        },
+      ],
       autoRefreshSeconds: 5,
       autoRefresh: [],
       disabled: true,
@@ -190,7 +386,9 @@ export default defineComponent({
       modalDownloadLink: null,
       modalTitle: null,
       contentFile: null,
-      searchBar: null,
+      // searchBar: null,
+      autoRefreshTimeout: null,
+      searchInput: {},
     };
   },
   mounted() {
@@ -203,9 +401,13 @@ export default defineComponent({
         .get("/api/tests/all")
         .then((res) => {
           if (this.data != null) {
-            let difference = this.data.length - res.data.tests[0].length;
+            let difference = res.data.tests[0].length - this.data.length;
             this.data = res.data.tests[0];
-            if (difference) {
+            if (difference > 0) {
+              let failedTests = res.data.tests[0]
+                .slice(0, difference)
+                .filter((row) => row.result == "FAIL");
+              console.log("failedTest", failedTests.length);
               // this.data.push(res.data.tests[0].slice(difference)); // for FAIL notification
               this.data = res.data.tests[0];
             }
@@ -256,7 +458,6 @@ export default defineComponent({
       return moment(test_date).format("YYYY/MM/DD HH:mm:ss");
     },
     onSelectChange(selectedRowKeys) {
-      console.log("selectedRowKeys changed: ", selectedRowKeys);
       this.selectedRowKeys = selectedRowKeys;
     },
     async download(dataType) {
@@ -305,9 +506,6 @@ export default defineComponent({
         responseType: "blob",
       })
         .then((res) => {
-          console.log(res.data.text);
-          res.data.text().then((text) => console.log(text));
-
           let fileUrl = window.URL.createObjectURL(new Blob([res.data]));
           let fileLink = document.createElement("a");
           fileLink.href = fileUrl;
@@ -319,12 +517,35 @@ export default defineComponent({
           console.log("error: ", err);
         });
     },
-    async handleResultSearch() {},
+    async searchTests(newValue) {
+      this.spinning = true;
+      await axios
+        .get(`/api/tests/search/${newValue}`)
+        .then((res) => {
+          this.data = res.data.tests[0];
+          this.spinning = false;
+        })
+        .catch((err) => {
+          console.log("error: ", err);
+        });
+    },
+    handleSearch(selectedKeys, confirm, dataIndex) {
+      confirm();
+      this.searchText = selectedKeys[0];
+      this.searchedColumn = dataIndex;
+    },
+    handleReset(clearFilters) {
+      clearFilters();
+      this.searchText = "";
+    },
   },
   computed: {
     hasSelected() {
       return this.selectedRowKeys.length > 0;
     },
+  },
+  created() {
+    this.searchTests = debounce(this.searchTests, 700);
   },
   watch: {
     autoRefresh(newValue) {
@@ -332,11 +553,14 @@ export default defineComponent({
         this.disabled = false;
         this.reRender = true;
 
-        setTimeout(() => {
+        clearTimeout(this.autoRefreshTimeout);
+        this.autoRefreshTimeout = setTimeout(() => {
           this.fetchTests();
         }, this.autoRefreshSeconds * 1000);
       } else {
         this.disabled = true;
+        clearTimeout(this.autoRefreshTimeout);
+        this.spinning = false;
       }
     },
     autoRefreshSeconds(newValue) {
@@ -350,109 +574,28 @@ export default defineComponent({
         }, this.autoRefreshSeconds * 1000);
       }
     },
-    searchBar(newValue) {
-      setTimeout(async () => {
-        if (newValue != "") {
-          this.spinning = true;
-          await axios
-            .get(`/api/tests/search/${newValue}`)
-            .then((res) => {
-              this.data = res.data.tests[0];
-              this.spinning = false;
-            })
-            .catch((err) => {
-              console.log("error: ", err);
-            });
-        } else {
-          this.data = null;
-          this.fetchTests();
-        }
-      }, 1000);
-    },
+
+    // async searchBar(newValue) {
+    //   if (newValue != "") {
+    //     let capitalizeNewValue = null;
+    //     // To search "LEDboard"
+    //     if (newValue.slice(0, 2).toLowerCase() === "le") {
+    //       capitalizeNewValue =
+    //         newValue.slice(0, 2).toUpperCase() + "D" + newValue.slice(3);
+    //     } else if (newValue.slice(0, 3).toLowerCase() === "led") {
+    //       capitalizeNewValue =
+    //         newValue.slice(0, 3).toUpperCase() + newValue.slice(3);
+    //     } else
+    //       capitalizeNewValue =
+    //         newValue.charAt(0).toUpperCase() + newValue.slice(1);
+    //     this.searchTests(capitalizeNewValue);
+    //   } else {
+    //     this.data = null;
+    //     this.fetchTests();
+    //   }
+    // },
   },
 });
-
-const columns = [
-  {
-    width: 120,
-    title: "Test Date",
-    dataIndex: "test_date",
-    key: "test_date",
-    fixed: "left",
-    slots: {
-      title: "Test Date",
-      customRender: "test_date",
-    },
-  },
-  {
-    title: "Serial Number",
-    width: 150,
-    dataIndex: "serial_number",
-    key: "serial_number",
-    fixed: "left",
-  },
-  {
-    title: "Mac Address",
-    dataIndex: "mac_address",
-    key: "mac_address",
-    width: 150,
-  },
-  {
-    title: "Test Part",
-    dataIndex: "test_station",
-    key: "test_station",
-    width: 150,
-  },
-  {
-    title: "Test Time (minutes)",
-    dataIndex: "test_time_minutes",
-    key: "test_time_minutes",
-    width: 100,
-  },
-  {
-    title: "Data(.txt)",
-    dataIndex: "data_txt_filename",
-    key: "data_txt_filename",
-    width: 150,
-    slots: { customRender: "data_txt_filename" },
-  },
-  {
-    title: "Log(.txt)",
-    dataIndex: "log_txt_filename",
-    key: "log_txt_filename",
-    width: 150,
-    slots: { customRender: "log_txt_filename" },
-  },
-  {
-    title: "Comport(.txt)",
-    dataIndex: "comport_txt_filename",
-    key: "comport_txt_filename",
-    width: 150,
-    slots: { customRender: "comport_txt_filename" },
-  },
-  {
-    title: "Telnet(.txt)",
-    dataIndex: "telnet_txt_filename",
-    key: "telnet_txt_filename",
-    width: 150,
-    slots: { customRender: "telnet_txt_filename" },
-  },
-  {
-    title: "Added Time",
-    dataIndex: "added_time",
-    key: "added_time",
-    width: 120,
-    slots: { customRender: "added_time" },
-  },
-  {
-    title: "Result",
-    dataIndex: "result",
-    key: "result",
-    width: 100,
-    fixed: "right",
-    slots: { customRender: "result" },
-  },
-];
 </script>
 
 <style scoped>

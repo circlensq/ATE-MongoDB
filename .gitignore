@@ -38,3 +38,5 @@ Thumbs.db
 
 server/node_modules/
 client/node_modules/
+
+server/media/

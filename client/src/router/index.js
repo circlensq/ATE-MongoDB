@@ -4,8 +4,8 @@ import BaseLayout from '../layout/BaseLayout.vue'
 const routes = [
   {
     path: '/',
+    redirect: {name: "dashboard-list"},
     name: 'Layout',
-    redirect: '/dashboard/list',
     component: BaseLayout,
     // meta: { requiresAuth: true },
     children: [
@@ -38,11 +38,11 @@ const routes = [
   //   name: 'ForgotPassword',
   //   component: () => import('@/views/user/ForgotPassword.vue'),
   // },
-  {
-    path: '/confirm',
-    name: 'confirm-account',
-    component: () => import('@/views/user/Confirm.vue'),
-  },
+  // {
+  //   path: '/confirm',
+  //   name: 'confirm-account',
+  //   component: () => import('@/views/user/Confirm.vue'),
+  // },
   
 ]
 

@@ -1,10 +1,9 @@
 <template>
-  <a-layout-sider
-    breakpoint="lg"
-    collapsed-width="0"
-  >
+  <a-layout-sider breakpoint="lg" collapsed-width="0">
     <div class="logo" :style="{ textAlign: 'center', marginTop: '10px' }">
-      <a-typography-title :style="{ color: 'white', marginBottom: '0px'}" :level="4"
+      <a-typography-title
+        :style="{ color: 'white', marginBottom: '0px' }"
+        :level="4"
         >ATE-Dashboard</a-typography-title
       >
     </div>
@@ -16,21 +15,19 @@
       :style="{ height: '100%', borderRight: 0 }"
     >
       <a-sub-menu key="dashboard">
-      <template #title>
+        <template #title>
           <span class="nav-text">
             <AppstoreOutlined />
             Dashboard
           </span>
         </template>
         <a-menu-item key="dashboard-list">
-          <router-link :to="{ name: 'dashboard-list' }">
-            List
-          </router-link>
+          <router-link :to="{ name: 'dashboard-list' }"> List </router-link>
         </a-menu-item>
       </a-sub-menu>
-       <a-sub-menu key="dashboard">
 
-      <template #title>
+      <a-sub-menu key="project">
+        <template #title>
           <span class="nav-text">
             <ProfileOutlined />
             Project
@@ -42,7 +39,6 @@
           </router-link>
         </a-menu-item>
       </a-sub-menu>
-      
     </a-menu>
   </a-layout-sider>
 </template>
@@ -53,7 +49,7 @@ import { AppstoreOutlined, ProfileOutlined } from "@ant-design/icons-vue";
 export default defineComponent({
   components: {
     AppstoreOutlined,
-    ProfileOutlined
+    ProfileOutlined,
   },
 
   setup() {
@@ -61,6 +57,6 @@ export default defineComponent({
       selectedKeys: ref(["dashboard-list"]),
       openKeys: ref(["dashboard"]),
     };
-  }
+  },
 });
 </script>
