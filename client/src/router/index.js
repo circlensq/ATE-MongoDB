@@ -7,31 +7,55 @@ const routes = [
     redirect: {name: "dashboard-list"},
     name: 'Layout',
     component: BaseLayout,
-    // meta: { requiresAuth: true },
+    meta: { requiresAuth: true },
     children: [
       {
         path: '/dashboard/list',
-        component: () => import('@/views/dashboard/List.vue'),
+        component: () => import('@/views/dashboard/ListTest.vue'),
         name: 'dashboard-list',
         meta: { title: 'Test List', affix: true}
       },
       {
+        path: '/project/list',
+        component: () => import('@/views/project/ListProject.vue'),
+        name: 'project-list',
+        meta: { title: 'List Project', affix: true}
+      },
+      {
         path: '/project/create',
-        component: () => import('@/views/project/Create.vue'),
+        component: () => import('@/views/project/CreateNew.vue'),
         name: 'project-create',
         meta: { title: 'Create New Project', affix: true}
+      },
+      {
+        path: '/project/edit/:id',
+        component: () => import('@/views/project/EditProject.vue'),
+        name: 'project-edit',
+        meta: { title: 'Edit Project', affix: true}
+      },
+      {
+        path: '/project/analysis/:id',
+        component: () => import('@/views/project/AnalysisChart.vue'),
+        name: 'project-analysis',
+        meta: { title: 'Project Analysis', affix: true}
+      },
+      {
+        path: '/upload/files',
+        component: () => import('@/views/upload/UploadFiles.vue'),
+        name: 'upload-files',
+        meta: { title: 'Upload Files', affix: true}
       },
     ]
   },
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/user/Login.vue'),
+    component: () => import('@/views/user/LoginPage.vue'),
   },
   {
     path: '/register',
     name: 'register',
-    component: () => import('@/views/user/Register.vue'),
+    component: () => import('@/views/user/RegisterPage.vue'),
   },
   // {
   //   path: '/forgotpassword',

@@ -6,6 +6,7 @@ const nodeoutlook = require('./nodeoutlook')
 
 // MongoDB Connection
 const mongoUtil = require('../src/mongoUtil')
+const { ObjectId } = require('mongodb')
 const db = mongoUtil.getDb()
 
 const sendLoginCodeEmail = (email, loginCode) => {
@@ -50,7 +51,7 @@ exports.register = async (req, res) => {
         const lastSuccessLogin = null
         const loginCodeExpiredTime = null
 
-        let new_user = {
+        let newUser = {
             username: username,
             password: hashPassword,
             first_name: firstName,
@@ -67,7 +68,7 @@ exports.register = async (req, res) => {
         }
 
         // Save a new user in database
-        const result = await db.collection("auth_users").insertOne(new_user)
+        const result = await db.collection("auth_users").insertOne(newUser)
         console.log(`New account is created with the following id: ${result.insertedId}`)
 
         res.status(200).send({ 'message': `Registration is successful. Please login again` })
@@ -83,9 +84,7 @@ exports.login = async (req, res) => {
     const userQuery = {
         username: req.body.username,
     }
-
     const result = await db.collection("auth_users").findOne(userQuery)
-
     if (result) {
         const validPass = await bcrypt.compare(req.body.password, result.password)
         // If password doesn't match
@@ -113,7 +112,6 @@ exports.login = async (req, res) => {
 
             const token = jwt.sign(payload, config.TOKEN_SECRET, { expiresIn: maxAge * 60000 }) /* Expires token in 5 minutes */
             res.cookie('token', token, { maxAge: maxAge * 60000 })
-            console.log(res)
             return res.status(200).send({ token, 'message': `One more step, please input the login code` })
 
         } else {
@@ -243,4 +241,19 @@ exports.checkUsername = async (req, res) => {
     }
 
     return res.status(200).send({ 'message': 'Username is valid' })
+}
+
+exports.searchUser = async (req, res) => {
+    const id = req.params.id
+
+    const userData = await db.collection("auth_users").findOne({
+        _id: ObjectId(id)
+    })
+
+    if (userData){
+        console.log('User data is found: ', userData)
+        return res.status(200).send({ 'user': userData })
+    }
+    return res.status(200).send({ 'error': 'User is not found' })
+
 }

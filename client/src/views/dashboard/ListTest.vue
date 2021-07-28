@@ -6,9 +6,12 @@
     :title="modalTitle"
     @ok="downloadSingle"
     @cancel="toggleModal"
+    width="800px"
   >
     <span class="pre-formatted" v-if="contentFile">
-      {{ contentFile }}
+      <div style="overflow: auto">
+        {{ contentFile }}
+      </div>
     </span>
     <i v-else>Loading File...</i>
   </a-modal>
@@ -51,6 +54,10 @@
       <a-row type="flex" justify="end">
         <a-space align="center" size="small">
           <a-form-item style="margin-bottom: 0">
+          <a-button type="primary" :loading="loading" @click="refreshTable" size="small">
+            Refresh
+          </a-button>
+          <a-divider type="vertical"/>
             <a-checkbox-group v-model:value="autoRefresh">
               <a-checkbox value="auto" name="type"
                 >auto refresh every</a-checkbox
@@ -82,7 +89,11 @@
       :data-source="data"
       :scroll="{ x: 1500, y: 500 }"
       :rowKey="(data) => data._id"
-      :pagination="{ pageSize: 10 }"
+      :pagination="{
+        pageSize: 10,
+        showSizeChanger: true,
+        pageSizeOptions: ['10', '20', '30', '40', '50'],
+      }"
     >
       <template
         #filterDropdownDateRange="{
@@ -236,6 +247,7 @@ import {
   EyeOutlined,
   SearchOutlined,
 } from "@ant-design/icons-vue";
+import { notification } from "ant-design-vue";
 import moment from "moment";
 import b64ToBlob from "b64-to-blob";
 
@@ -251,6 +263,7 @@ export default defineComponent({
       searchText: "",
       searchColumn: "",
       data: null,
+      loading: false,
       columns: [
         {
           width: 120,
@@ -283,6 +296,28 @@ export default defineComponent({
                 );
               }
             } else return record;
+          },
+        },
+        {
+          title: "Project",
+          width: 150,
+          dataIndex: "project[0].name",
+          key: "project[0].name",
+          fixed: "left",
+          slots: {
+            filterDropdown: "filterDropdown",
+            filterIcon: "filterIcon",
+            customRender: "customRender",
+          },
+          onFilter: (value, record) =>
+            record.project[0].name
+              .toString()
+              .toLowerCase()
+              .includes(value.toLowerCase()),
+          onFilterDropdownVisibleChange: (visible) => {
+            if (visible) {
+              console.log(visible);
+            }
           },
         },
         {
@@ -448,7 +483,6 @@ export default defineComponent({
       modalDownloadLink: null,
       modalTitle: null,
       contentFile: null,
-      // searchBar: null,
       autoRefreshTimeout: null,
       searchInput: {},
     };
@@ -457,6 +491,10 @@ export default defineComponent({
     this.fetchTests();
   },
   methods: {
+    async refreshTable(){
+      this.loading = true
+      await this.fetchTests().then(() => this.loading = false);
+    },
     async fetchTests() {
       this.spinning = true;
       await axios
@@ -469,8 +507,28 @@ export default defineComponent({
               let failedTests = res.data.tests[0]
                 .slice(0, difference)
                 .filter((row) => row.result == "FAIL");
-              console.log("failedTest", failedTests.length);
-              // this.data.push(res.data.tests[0].slice(difference)); // for FAIL notification
+
+              if (
+                failedTests.length > 0 &&
+                this.$store.state.notification.enableFailNotification &&
+                this.$store.state.notification.notificationAPIStatus
+              ) {
+                // 建立通知
+                new Notification("ATE Dashboard", {
+                  body:
+                    failedTests.length > 1
+                      ? `Fail tests (${failedTests.length}):` +
+                        failedTests.map((test) => test.serial_number)
+                      : "Fail test (1): " +
+                        failedTests.map((test) => test.serial_number),
+                });
+              } else if (
+                failedTests.length > 0 &&
+                this.$store.state.notification.enableFailNotification &&
+                !this.$store.state.notification.notificationAPIStatus
+              ) {
+                this.openNotificationWithIcon("error", failedTests);
+              }
               this.data = res.data.tests[0];
             }
           } else {
@@ -488,15 +546,16 @@ export default defineComponent({
 
       if (this.modalVisible) {
         this.modalDownloadLink = txt_filename;
-        let textFilenameSplit = txt_filename.split("\\");
+        let textFilenameSplit = txt_filename.split("/");
         this.modalTitle = textFilenameSplit[textFilenameSplit.length - 1];
       }
 
       let convertLink = this.modalDownloadLink
-        .replace(".\\\\", "")
-        .replace("\\\\", "-")
-        .replace(/\\/g, "-");
-      // convertLink = Data-Dotboard-2021_06_21-DB1111111111_202106210830.txt
+        .replace("/", "-")
+        .replace("/", "-")
+        .replace("/", "-")
+        .replace("/", "-");
+      // convertLink = docs-Data-Dotboard-2021_06_21-DB1111111111_202106210830.txt
 
       await axios({
         method: "get",
@@ -509,6 +568,16 @@ export default defineComponent({
         .catch((err) => {
           console.log("error: ", err);
         });
+    },
+    openNotificationWithIcon(type, failedTests) {
+      notification[type]({
+        message: "Failed Test",
+        description:
+          failedTests.length > 1
+            ? `Fail tests (${failedTests.length}):` +
+              failedTests.map((test) => test.serial_number)
+            : "Fail test (1): " + failedTests.map((test) => test.serial_number),
+      });
     },
     onFocus() {
       this.isOnFocus = true;
@@ -552,11 +621,12 @@ export default defineComponent({
         });
     },
     async downloadSingle() {
-      // modalDownloadLink = .\\Data\\Dotboard\2021_06_21\DB1111111111_202106210830.txt
+      // modalDownloadLink = docs/Data/Dotboard/2021_06_21/DB1111111111_202106210830.txt
       let convertLink = this.modalDownloadLink
-        .replace(".\\\\", "")
-        .replace("\\\\", "-")
-        .replace(/\\/g, "-");
+        .replace("/", "-")
+        .replace("/", "-")
+        .replace("/", "-")
+        .replace("/", "-");
       // convertLink = Data-Dotboard-2021_06_21-DB1111111111_202106210830.txt
 
       let convertLinkSplit = convertLink.split("-");

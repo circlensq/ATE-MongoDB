@@ -3,7 +3,7 @@
     :style="{ background: '#fff', paddingTop: '0px', paddingRight: '20px' }"
   >
     <a-row>
-      <a-col :span="12">  
+      <a-col :span="12">
         <!-- <a-input-search
           v-model:value="searchBar"
           placeholder="Quick search (input with SN or MAC Address or 'PASS' and 'FAIL'"
@@ -14,6 +14,17 @@
           <div class="space-align-container">
             <div class="space-align-block">
               <a-space align="center">
+                <a-tooltip placement="bottom">
+                  <template #title>
+                    <span>FAIL notification</span>
+                  </template>
+                  <a-switch
+                    checked-children="开"
+                    un-checked-children="关"
+                    v-model:checked="enableFailNotification"
+                    @change="switchFailNotification"
+                  />
+                </a-tooltip>
                 <a-dropdown placement="bottomRight">
                   <a-avatar
                     shape="circle"
@@ -45,11 +56,55 @@
 <script>
 export default {
   data() {
-    return{
+    return {
       searchBar: null,
+    };
+  },
+ 
+  mounted() {
+    let store = this.$store
+
+    let notifyConfig = {
+      body: "Notification is enabled", // 設定內容
+      // icon: '/images/favicon.ico', // 設定 icon
+    };
+
+    if (!("Notification" in window)) {
+      console.log("This browser does not support notification");
+      this.$store.dispatch("notification/setFalseNotificationAPIActions");
+    }
+
+    if (
+      Notification.permission === "default" ||
+      Notification.permission === "undefined"
+    ) {
+      Notification.requestPermission(function (permission) {
+        if (permission === "granted") {
+          // 使用者同意授權
+          new Notification("ATE Dashboard", notifyConfig); // 建立通知
+          store.dispatch("notification/setTrueFailNotificationActions");
+          store.dispatch("notification/setTrueNotificationAPIActions");
+        } else {
+          store.dispatch("notification/setFalseNotificationAPIActions");
+        }
+      });
+    }
+    else if (Notification.permission === "denied") {
+      store.dispatch("notification/setFalseNotificationAPIActions");
+    }
+  },
+  computed: {
+    enableFailNotification() {
+      return this.$store.state.notification.enableFailNotification
     }
   },
   methods: {
+    switchFailNotification(){
+      if (this.enableFailNotification == true)
+        this.$store.dispatch("notification/setFalseFailNotificationActions");
+      else
+        this.$store.dispatch("notification/setTrueFailNotificationActions");
+    },
     logout() {
       this.$store.dispatch("user/logout");
     },

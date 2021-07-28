@@ -1,29 +1,31 @@
 const router = require('express').Router()
-const csurf = require('csurf')
-const csrfProtection = csurf({ cookie: true }) 
+var csurf = require('csurf')
+var csrfProtection = csurf({ cookie: true })
 
 const { verifyUserToken, IsSuperuser, IsStaff, IsActive } = require("../middleware/auth");
 
 const userController = require('../controllers/user')
-const dataController = require('../controllers/data')
-const fileController = require('../controllers/file')
+const dataController = require('../controllers/tests')
+const fileController = require('../controllers/file_tests')
+const fileUniversalController = require('../controllers/file_universal')
 const projectController = require('../controllers/project')
 
 // Send CSRF token for session
-router.get('/getcsrftoken', csrfProtection, function (req, res) {
+router.get('/getcsrftokensecre', csrfProtection, function (req, res) {
     return res.json({ csrfToken: req.csrfToken() });
 });
 
-// Register a new User
-router.post('/accounts/register', userController.register )
 
-// Register Utilities
-router.post('/accounts/register/checkUsername', userController.checkUsername)
-router.post('/accounts/register/checkMaxEmailUsage', userController.checkMaxEmailUsage)
+// Register User
+router.post('/accounts/register', csrfProtection, userController.register)
+router.post('/accounts/register/checkUsername', csrfProtection, userController.checkUsername)
+router.post('/accounts/register/checkMaxEmailUsage', csrfProtection, userController.checkMaxEmailUsage)
 
 // Login user
-router.post('/accounts/login', userController.login)
+router.post('/accounts/login', csrfProtection, userController.login)
+router.post('/accounts/login/instrument', userController.login)
 router.post('/accounts/getId', verifyUserToken, userController.getId)
+router.get('/accounts/user/search/:id', userController.searchUser)
 
 // Login code user
 router.post('/accounts/login/code', userController.submitLoginCode)
@@ -41,13 +43,26 @@ router.get('/events', verifyUserToken, IsActive, userController.userEvent)
 router.get('/tests/all', dataController.getAll)
 router.get('/tests/updateData', dataController.getUpdateData)
 router.get('/tests/search/:query', dataController.searchTest)
+router.get('/tests/search/:project_id/:test_station', dataController.passedPercentages)
 
-// Upload File API route
+// * Test .txt Upload & Download File API route (for C#) -> ONLY FOR Data, log, ComportText, TelnetText
 router.post('/file/upload', verifyUserToken, IsStaff, fileController.upload)
-router.post('/file/download/:data', fileController.download)
-router.get('/file/download/:name', fileController.downloadSingle) 
+router.post('/file/download/:name', fileController.download)
+
+// * Universal Upload File API (for Dashboard)
+router.post('/file/universal/upload', verifyUserToken, IsStaff, fileUniversalController.upload)
+router.get('/file/universal/all', fileUniversalController.getAll)
+router.post('/file/universal/delete', fileUniversalController.deleteFile)
+router.post('/file/universal/download', fileUniversalController.download)
+
+// Download .txt file and universal files
+router.get('/file/download/:name', fileController.downloadSingle)
 
 // Project Data route
-router.post('/project/create',  verifyUserToken, IsStaff, projectController.createProject)
+router.post('/project/create', projectController.createProject)
+router.post('/project/edit', projectController.editProject)
+router.get('/project/all', projectController.projectsAll)
+router.get('/project/:id', projectController.projectData)
+router.get('/project/search/:name', projectController.searchProject)
 
 module.exports = router

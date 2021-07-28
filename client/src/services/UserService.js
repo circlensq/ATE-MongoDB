@@ -1,16 +1,17 @@
 import axios from 'axios'
-
-const apiLogin = axios.create({
-    baseURL: "/api",
-    withCredentials: false,
-    headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-    }
-})
+import store from '../store/index'
    
 export default {
     postLogin(user) {
-        return apiLogin.post('/accounts/login', user)
+        return axios.create({
+            baseURL: "/api",
+            withCredentials: false,
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': store.getters.getCSRFToken
+            }
+        }).post('/accounts/login', user)
+        
     }
 }
