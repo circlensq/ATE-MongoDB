@@ -10,27 +10,36 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: jzhipster
       MONGO_INITDB_DATABASE: ate_mongodb
     volumes: # Mounts host paths or named volumes, specified as sub-options to a service.
-      - /home/richard/mongodb_4.4/:/data/db
+      - /home/ate/dashboard-v2.0-data/mongodb_4.4/:/data/db
     command: [--auth]
     ports:
       - 27017:27017
-  
+
   server:
     restart: unless-stopped
-    build: 
+    container_name: server
+    build:
       context: ./server/
       target: dev
-    container_name: dashboard-server
     volumes:
-      - ./server/:/src
+      - ./server/:/src/
       - /src/node_modules
-      - /home/ate/dashboard-v2.0-data/server/media/:/media
+      - /home/ate/dashboard-v2.0-data/server/media/:/media/
     command: npm run start:dev
     ports:
       - "8080:8000"
-    environment: 
-      NODE_ENV: development
+    environment:
+      NODE_ENV: dev
       DEBUG: server:*
+    
+  client:
+    container_name: dashboard-client
+    build:
+      context: ./client/
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
 
 volumes:
-  mongodb_data_container:
+  media:
+  mongodb_4.4:
