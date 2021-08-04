@@ -1,0 +1,2 @@
+use ate_tests
+db.ate_tests.updateMany({project_id: 1}, {$set: { project_id: ObjectId("60dd4f35d224b9c78c2a60b3")}} )

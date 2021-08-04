@@ -60,6 +60,9 @@
         <a-menu-item key="upload-files">
           <router-link :to="{ name: 'upload-files' }"> Files </router-link>
         </a-menu-item>
+        <a-menu-item key="upload-test">
+          <router-link :to="{ name: 'upload-test' }"> Test </router-link>
+        </a-menu-item>
       </a-sub-menu>
 
     </a-menu>

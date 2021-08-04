@@ -29,6 +29,10 @@ export default defineComponent({
 </script>
 
 <style>
+html, body{
+  margin: 0px;
+  height: 100%;
+}
 #app {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

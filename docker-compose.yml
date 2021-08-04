@@ -1,19 +1,36 @@
-version: '3'
+version: '3.7'
 
 services:
-  mongodb_3:
+  mongodb_4.4:
     restart: unless-stopped
-    image : mongo:3.6 # MongoDB v3.6
-    container_name: mongodb_3.6
+    image : mongo:4.4 # MongoDB v4.4
+    container_name: mongodb_4.4
     environment:
       MONGO_INITDB_ROOT_USERNAME: jzate
       MONGO_INITDB_ROOT_PASSWORD: jzhipster
       MONGO_INITDB_DATABASE: ate_mongodb
     volumes: # Mounts host paths or named volumes, specified as sub-options to a service.
-      - /home/richard/mongodb_3/:/data/db
+      - /home/richard/mongodb_4.4/:/data/db
     command: [--auth]
     ports:
       - 27017:27017
+  
+  server:
+    restart: unless-stopped
+    build: 
+      context: ./server/
+      target: dev
+    container_name: dashboard-server
+    volumes:
+      - ./server/:/src
+      - /src/node_modules
+      - /home/ate/dashboard-v2.0-data/server/media/:/media
+    command: npm run start:dev
+    ports:
+      - "8080:8000"
+    environment: 
+      NODE_ENV: development
+      DEBUG: server:*
 
 volumes:
   mongodb_data_container:

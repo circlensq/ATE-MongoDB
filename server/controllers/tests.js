@@ -34,6 +34,19 @@ exports.getUpdateData = async (req, res) => {
         console.log("received a change to the collection: \t", next);
     });
 }
+exports.getById = async (req, res) => {
+    const projectId = req.params.id;
+    let query = { project_id: ObjectId(projectId) };
+    try {
+        await ate_tests.find(query).sort({test_date: -1}).toArray(function (err, result) {
+            if (err) throw err;
+            res.status(200).send({ 'tests': [result] })
+        });
+    } 
+    catch (err) {
+        console.log('Error Find Test by Id: ', err);
+    }
+}
 
 exports.searchTest = async (req, res) => {
     const querySearch = req.params.query;

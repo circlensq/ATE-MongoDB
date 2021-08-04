@@ -2,9 +2,9 @@
     "name": "barebones",
     "version": "0.3.0",
     "description": "ATE Dashboard using MongoDB",
-    "main": "server/index.js",
     "scripts": {
-        "serve": "nodemon src/app.js"
+        "start:production": "node src/app.js",
+        "start:dev": "nodemon src/app.js"
     },
     "dependencies": {
         "bcryptjs": "^2.4.3",
@@ -12,7 +12,7 @@
         "cookie-parser": "^1.4.5",
         "csurf": "^1.11.0",
         "express": "^4.17.1",
-        "formidable": "^1.2.2",
+        "formidable": "^2.0.0-canary.20200504.1",
         "jsonwebtoken": "^8.5.1",
         "jszip": "^3.6.0",
         "mongodb": "^3.6.9",

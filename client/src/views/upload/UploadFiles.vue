@@ -1,9 +1,17 @@
 <template>
-  <a-row style="margin-bottom: 10px">
     <div id="app">
+      <!-- <file-pond
+      name="test"
+      ref="pond"
+      label-idle="Drop files here..."
+      v-bind:allow-multiple="true"
+      accepted-file-types="image/jpeg, image/png"
+      server="/api"
+      v-bind:files="myFiles"
+      v-on:init="handleFilePondInit"
+    /> -->
       <dashboard :uppy="uppy" :props="{ theme: 'light', height: 350 }" />
     </div>
-  </a-row>
   <a-row style="margin-bottom: 10px">
     <a-col :span="6">
       <a-space align="center">
@@ -187,12 +195,33 @@ import axios from "axios";
 import moment from "moment";
 import b64ToBlob from "b64-to-blob";
 
+// import vueFilePond from "vue-filepond";
+
+// Import FilePond styles
+// import "filepond/dist/filepond.min.css";
+
+// Import FilePond plugins
+// Please note that you need to install these plugins separately
+
+// Import image preview plugin styles
+// import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
+
+// Import image preview and file type validation plugins
+// import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
+// import FilePondPluginImagePreview from "filepond-plugin-image-preview";
+
+// Create component
+// const FilePond = vueFilePond(
+  // FilePondPluginFileValidateType,
+  // FilePondPluginImagePreview
+// );
 export default {
   name: "App",
   components: {
     Dashboard,
     SearchOutlined,
     DownloadOutlined,
+    // FilePond
   },
   data() {
     return {
@@ -292,23 +321,35 @@ export default {
       const token = localStorage.getItem('user')
       return new Uppy({
         restrictions: {
-          maxFileSize: 1000000000, // 1000mb
+          maxFileSize: 1000000000, // 1000mb = 1GB
         },
         meta: { user: localStorage.getItem("user") },
       }).use(XHRUpload, {
         endpoint: "/api/file/universal/upload",
         fieldName: "files",
+        timeout: 0,
         headers: {
           Authorization: `Token ${token}`,
         }
+      }).on('upload-error', (file, error, response) => {
+        console.log('response', response)
+        if (error.isNetworkError) {
+          // Let your users know that file upload could have failed
+          // due to firewall or ISP issues
+          console.log('err', error)
+        }
       })
     }
-
   },
   beforeUnmount() {
     this.uppy.close();
   },
   methods: {
+    //  handleFilePondInit: function () {
+    //   console.log("FilePond has initialized");
+
+    //   // FilePond instance methods are available on `this.$refs.pond`
+    // },
     async refreshTable(){
       this.loading = true
       await this.getAllFiles().then(() => this.loading = false);
@@ -332,7 +373,6 @@ export default {
           deleteId: this.selectedRowKeys,
         },
       }).then((res) => {
-        console.log(res);
         if (res.data.message) {
           this.getAllFiles();
         } else if (res.data.error) {

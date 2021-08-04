@@ -6,7 +6,7 @@ ATE Dashboard v2.0 is the second generation of ATE Dashboard that is built to he
 4. For **deployment**, refer to [Deploy On Docker](#deploy-on-docker).
 
 ## Architecture
-![Image of ATE Dashboard Architecture](ATE-Dashboardv2.0-Architecture.png)
+![Image of ATE Dashboard Architecture](./ATE-Dashboardv2.0-Architecture.png)
 
 ### Technology References
 1. VueJS retrieves data by using RESTFUL API (NodeJS + Express)
@@ -47,35 +47,41 @@ Note: every URL will be begun with `/api` e.g. `GET http://localhost:8000/api/te
 8. Open browser and type `localhost:8080`
 
 ### Deploy on Docker
-1. Before build and running below commands, make sure you don't have any images named _dashboard-server_ and _dashboard-client_. If yes, please name your image with other name.<br>
-Also ensure to free port :8080 and :80
+**Notes**: Before build and running below commands, make sure you don't have any images named _dashboard-server_ and _dashboard-client_. If yes, please name your image with other name.<br>
+Also ensure to free port **:8080** and **:80**
 
-2. Install MongoDB using [MongoDB Docker Official Images](https://hub.docker.com/_/mongo) [docker-compose.yml](docker-compose.yml) and run these below commands<br/>
+#### Build & Run MongoDB Container
+
+1. Install MongoDB using [MongoDB Docker Official Images](https://hub.docker.com/_/mongo) [docker-compose.yml](docker-compose.yml) and run these below commands<br/>
 `docker-compose up -d`
 
-3. Install MongoDB Compass in your computer, then connect to your **admin** database with **username** and **password** in your docker-compose.yml
+2. Install MongoDB Compass in your computer, then connect to your **admin** database with **username** and **password** in your docker-compose.yml
 
-4. Then, Create Database named `ate_mongodb` with collection name `auth_users`, `ate_projects`, and `ate_tests`.
+3. Then, Create Database named `ate_mongodb` with collection name `auth_users`, `ate_projects`, and `ate_tests`.
 Configure the `DB_HOST` url in [config.js](server/config/config.js) with
 ```
 DB_HOST: 'mongodb://<username>:<password>@<ip_address>:27017/?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false'
 ```
 
-5. Go to _server_ folder, build _dashboard-server_ image <br>
-`docker build . -t dashboard-server`
+#### Build & Run Server Container
 
-6. Then run the image, and we name it _server_<br>
+1. Go to _server_ folder, build _dashboard-server_ image <br>
+`docker build . -t dashboard-server --no-cache`
+
+2. Then run the image, and we name it _server_<br>
 `docker run -d -p 8080:8000 --name server dashboard-server` <br>
 The server is running on port 8000 (as default in the code), then we map it to port 8080. So, API will be accessed from <br>
 _http:<ip_address>:8080/api/_
 
-7. **Open new terminal**, go to _client_ folder, then build client image <br>
-`docker build . -t dashboard-client`
+#### Build & Run Client Container
 
-8. Run _dashboard-client_ image, we name it _client_ <br>
+1. **Open new terminal**, go to _client_ folder, then build client image <br>
+`docker build . -t dashboard-client --no-cache`
+
+2. Run _dashboard-client_ image, we name it _client_ <br>
 `docker run -d -p 80:80 --name client dashboard-client`
 
-9. Open browser, go to _http:<ip_address>_ e.g. `http://192.168.100.150`, it will redirect you to Login page
+3. Open browser, go to _http:<ip_address>_ e.g. `http://192.168.100.150`, it will redirect you to Login page
 
 References:
 - server: https://nodejs.org/en/docs/guides/nodejs-docker-webapp/

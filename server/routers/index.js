@@ -43,14 +43,18 @@ router.get('/events', verifyUserToken, IsActive, userController.userEvent)
 router.get('/tests/all', dataController.getAll)
 router.get('/tests/updateData', dataController.getUpdateData)
 router.get('/tests/search/:query', dataController.searchTest)
+router.get('/tests/:id/', dataController.getById)
 router.get('/tests/search/:project_id/:test_station', dataController.passedPercentages)
 
-// * Test .txt Upload & Download File API route (for C#) -> ONLY FOR Data, log, ComportText, TelnetText
+// * Test .txt files Upload & Download File API route (for C#) -> ONLY FOR Data, log, ComportText, TelnetText
 router.post('/file/upload', verifyUserToken, IsStaff, fileController.upload)
 router.post('/file/download/:name', fileController.download)
 
+// * Test .txt files Upload (Converter File) API route (website) -> ONLY FOR Data, log, ComportText, TelnetText
+router.post('/file/converter/upload', fileController.converter)
+
 // * Universal Upload File API (for Dashboard)
-router.post('/file/universal/upload', verifyUserToken, IsStaff, fileUniversalController.upload)
+router.post('/file/universal/upload', fileUniversalController.upload)
 router.get('/file/universal/all', fileUniversalController.getAll)
 router.post('/file/universal/delete', fileUniversalController.deleteFile)
 router.post('/file/universal/download', fileUniversalController.download)

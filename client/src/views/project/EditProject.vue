@@ -147,11 +147,6 @@ export default {
     this.getProjectData(this.$route.params.id);
   },
   methods: {
-    searchProjectName() {
-      axios.get(`/api/project/search/${this.formState.name}`).then((res) => {
-        console.log(res);
-      });
-    },
     addStation() {
       this.formState.stations.push({
         value: "",

@@ -95,7 +95,7 @@ exports.searchProject = async(req, res) => {
                 return res.status(200).send({ 'message': 'Project Name is valid'})
             } 
             else if (result){
-                res.status(200).send({ 'error': 'Project name is exists. Please use other name', 'id': result._id})
+                res.status(200).send({ 'error': 'Project name is exists. Please use other name', 'id': result._id, 'project': result})
             }
         });
     }

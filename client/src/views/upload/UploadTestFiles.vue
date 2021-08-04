@@ -1,41 +1,58 @@
 <template>
-  <a-modal
-    cancel-text="Cancel"
-    ok-text="Download"
-    :visible="modalVisible"
-    :title="modalTitle"
-    @ok="downloadSingle"
-    @cancel="toggleModal"
-    width="800px"
-  >
-    <span class="pre-formatted" v-if="contentFile">
-      <div style="overflow: auto">
-        {{ contentFile }}
-      </div>
-    </span>
-    <i v-else>Loading File...</i>
-  </a-modal>
   <a-row style="margin-bottom: 10px">
-    <a-col :span="6">
-      <span style="margin-left: 8px">
-        Project:
+    <div id="app">
+      <dashboard
+        :uppy="uppy"
+        :props="{ theme: 'light', width: 350, height: 350 }"
+      />
+    </div>
+    <a-form
+      ref="formRef"
+      :model="formState"
+      :rules="rules"
+      :label-col="labelCol"
+      :wrapper-col="wrapperCol"
+      @finish="onSubmit"
+      style="width: 500px"
+    >
+      <a-form-item label="Project" name="project">
         <a-select
-          v-model:value="selectedProjectId"
-          style="width: 120px"
-          ref="selectProject"
-          @change="fetchTestsById"
-          defaultActiveFirstOption
+          v-model:value="formState.project"
+          show-search
+          placeholder="Select a project"
+          option-filter-prop="label"
+          :filter-option="filterOption"
+          @change="getStations"
         >
           <a-select-option
             v-for="project in projects"
-            :value="project._id"
+            :value="project.name"
             :key="project._id"
+            >{{ project.name }}</a-select-option
           >
-            {{ project.name }}
-          </a-select-option>
         </a-select>
-      </span>
-    </a-col>
+      </a-form-item>
+      <a-form-item label="Station" name="station">
+        <a-select v-model:value="formState.station">
+          <a-select-option
+            v-for="(station, index) in projectStations"
+            placeholder="Select a station"
+            :selected="index == 0 ? true : false"
+            :value="station.value"
+            :key="station._id"
+            >{{ station.value }}</a-select-option
+          >
+        </a-select>
+      </a-form-item>
+      <a-form-item label="Test" name="test">
+        <a-select v-model:value="formState.test" placeholder="Select .txt type">
+          <a-select-option value="data">Data</a-select-option>
+          <a-select-option value="log">log</a-select-option>
+          <a-select-option value="comport">ComportText</a-select-option>
+          <a-select-option value="telnet">TelnetText</a-select-option>
+        </a-select>
+      </a-form-item>
+    </a-form>
   </a-row>
   <a-row style="margin-bottom: 10px">
     <a-col :span="6">
@@ -43,20 +60,13 @@
         <a-dropdown>
           <template #overlay>
             <a-menu>
-              <a-menu-item key="download_data" @click="download('data')"
-                >Download Data(.txt)</a-menu-item
-              >
-              <a-menu-item key="download_log" @click="download('log')"
-                >Download Log(.txt)</a-menu-item
-              >
-              <a-menu-item key="download_comport" @click="download('comport')"
-                >Download Comport(.txt)</a-menu-item
-              >
-              <a-menu-item key="download_telnet" @click="download('telnet')"
-                >Download Telnet(.txt)</a-menu-item
+              <a-menu-item key="download" @click="download"
+                >Download Selected</a-menu-item
               >
               <a-tooltip title="Danger!" color="red" placement="right">
-                <a-menu-item key="delete">Delete</a-menu-item>
+                <a-menu-item key="delete" @click="deleteFile"
+                  >Delete</a-menu-item
+                >
               </a-tooltip>
             </a-menu>
           </template>
@@ -75,33 +85,10 @@
     <a-col :span="18">
       <a-row type="flex" justify="end">
         <a-space align="center" size="small">
-          <a-form-item style="margin-bottom: 0">
-            <a-button
-              type="primary"
-              :loading="loading"
-              @click="refreshTable"
-              size="small"
-            >
-              Refresh
-            </a-button>
-            <a-divider type="vertical" />
-            <a-checkbox-group v-model:value="autoRefresh">
-              <a-checkbox value="auto" name="type"
-                >auto refresh every</a-checkbox
-              >
-            </a-checkbox-group>
-
-            <a-input-number
-              size="small"
-              :min="1"
-              :max="10000"
-              :disabled="disabled"
-              v-model:value="autoRefreshSeconds"
-              @focus="onFocus"
-              @blur="onBlur"
-            />
-            seconds
-          </a-form-item>
+          Click 'Refresh' to see uploaded files
+          <a-button type="primary" :loading="loading" @click="refreshTable">
+            Refresh
+          </a-button>
         </a-space>
       </a-row>
     </a-col>
@@ -114,7 +101,6 @@
       }"
       :columns="columns"
       :data-source="data"
-      :scroll="{ x: 1500, y: 500 }"
       :rowKey="(data) => data._id"
       :pagination="{
         pageSize: 10,
@@ -219,42 +205,15 @@
             <template v-else>{{ fragment }}</template>
           </template>
         </span>
-        <template v-else-if="column.dataIndex == 'test_date'">
-          {{ testDateFormatted(text) }}
-        </template>
-        <template v-else-if="column.dataIndex == 'error_code'">
-          <span v-if="text === '0' ? '' : text">
-            {{ text }}
+        <template v-else-if="column.dataIndex == 'filepath'">
+          <span v-if="text">
+            <a-button type="link" @click="downloadSingle(text)">
+              <DownloadOutlined twoToneColor="#f39c12" />
+            </a-button>
           </span>
         </template>
         <template v-else-if="column.dataIndex == 'added_time'">
           {{ testDateFormatted(text) }}
-        </template>
-        <template
-          v-else-if="
-            column.dataIndex == 'data_txt_filename' ||
-            column.dataIndex == 'log_txt_filename' ||
-            column.dataIndex == 'comport_txt_filename' ||
-            column.dataIndex == 'telnet_txt_filename'
-          "
-        >
-          <span v-if="text">
-            <a-button type="link" @click="toggleModal(text)">
-              <EyeOutlined twoToneColor="#f39c12" />
-            </a-button>
-          </span>
-          <span v-else>
-            <a-button type="link" style="color: black; cursor: not-allowed">
-              <EyeInvisibleOutlined />
-            </a-button>
-          </span>
-        </template>
-        <template v-else-if="column.dataIndex == 'result'">
-          <span>
-            <a-tag :color="text === 'PASS' ? '#0be881' : '#ff4d4f'">
-              {{ text.toUpperCase() }}
-            </a-tag>
-          </span>
         </template>
         <template v-else>
           {{ text }}
@@ -265,31 +224,42 @@
 </template>
 
 <script>
-import axios from "axios";
-import debounce from "debounce";
-import { defineComponent } from "vue";
-import {
-  DownOutlined,
-  EyeInvisibleOutlined,
-  EyeOutlined,
-  SearchOutlined,
-} from "@ant-design/icons-vue";
+import { Dashboard } from "@uppy/vue";
 import { notification } from "ant-design-vue";
+
+import "@uppy/core/dist/style.min.css";
+import "@uppy/dashboard/dist/style.min.css";
+
+import Uppy from "@uppy/core";
+import XHRUpload from "@uppy/xhr-upload";
+import { SearchOutlined, DownloadOutlined } from "@ant-design/icons-vue";
+import axios from "axios";
 import moment from "moment";
 import b64ToBlob from "b64-to-blob";
 
-export default defineComponent({
+export default {
+  name: "App",
   components: {
-    EyeOutlined,
-    EyeInvisibleOutlined,
-    DownOutlined,
+    Dashboard,
     SearchOutlined,
+    DownloadOutlined,
   },
   data() {
     return {
+      labelCol: { span: 4 },
+      wrapperCol: { span: 14 },
+      formRef: {},
+      formState: {
+        project: null,
+        station: null,
+        test: null,
+      },
+      projectStations: [],
       searchText: "",
       searchColumn: "",
+      selectedRowKeys: [],
       data: null,
+      onComplete: false,
       loading: false,
       columns: [
         {
@@ -479,173 +449,141 @@ export default defineComponent({
           slots: { customRender: "customRender" },
         },
       ],
-      autoRefreshSeconds: 5,
-      autoRefresh: [],
-      disabled: true,
+      rules: {
+        project: [
+          {
+            type: "string",
+            validator: this.checkProjectName,
+            required: true,
+            trigger: ["change", "blur"],
+          },
+        ],
+        station: [
+          {
+            type: "string",
+            validator: this.checkProjectStation,
+            required: true,
+            trigger: "blur",
+          },
+        ],
+        test: [
+          {
+            type: "string",
+            validator: this.checkProjectFile,
+            required: true,
+            trigger: "blur",
+          },
+        ],
+      },
       spinning: false,
-      autoTimeout: null,
-      modalVisible: false,
-      isOnFocus: false,
-      selectedRowKeys: [],
-      modalDownloadLink: null,
-      modalTitle: null,
-      contentFile: null,
-      autoRefreshTimeout: null,
-      searchInput: {},
-      projects: [],
-      selectedProjectId: null,
+      getUsername: null,
+      projects: null,
     };
   },
   mounted() {
+    this.getAllFiles();
     this.fetchProjects();
   },
+  computed: {
+    hasSelected() {
+      return this.selectedRowKeys.length > 0;
+    },
+    uppy: () => {
+      const token = localStorage.getItem("user");
+      return new Uppy({
+        restrictions: {
+          maxFileSize: 1000000000, // 1000mb
+        },
+        meta: {
+          user: token,
+        },
+      })
+        .use(XHRUpload, {
+          endpoint: "/api/file/converter/upload",
+          fieldName: "files",
+          formData: true,
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        })
+    },
+  },
+  beforeUnmount() {
+    this.uppy.close();
+  },
   methods: {
+    async getStations(value) {
+      await axios.get(`/api/project/search/${value}`).then((res) => {
+        this.projectStations = res.data.project.stations;
+      });
+    },
+    filterOption(input, option) {
+      return option.props.value.toLowerCase().indexOf(input.toLowerCase()) >= 0;
+    },
     async fetchProjects() {
+      this.spinning = true;
       await axios.get("/api/project/all").then((res) => {
         this.projects = res.data.projects[0];
-        this.selectedProjectId = res.data.projects[0][0]._id;
-        this.fetchTestsById();
       });
+      this.spinning = false;
     },
     async refreshTable() {
       this.loading = true;
-      await this.fetchTests().then(() => (this.loading = false));
+      await this.getAllFiles().then(() => (this.loading = false));
     },
-    async fetchTestsById() {
-      if (this.selectedProjectId != null) {
-        this.spinning = true;
-        await axios
-          .get(`/api/tests/${this.selectedProjectId}`)
-          .then((res) => {
-            if (this.data != null) {
-              let difference = res.data.tests[0].length - this.data.length;
-              this.data = res.data.tests[0];
-              if (difference > 0) {
-                let failedTests = res.data.tests[0]
-                  .slice(0, difference)
-                  .filter((row) => row.result == "FAIL");
-
-                if (
-                  failedTests.length > 0 &&
-                  this.$store.state.notification.enableFailNotification &&
-                  this.$store.state.notification.notificationAPIStatus
-                ) {
-                  // 建立通知
-                  new Notification("ATE Dashboard", {
-                    body:
-                      failedTests.length > 1
-                        ? `Fail tests (${failedTests.length}):` +
-                          failedTests.map((test) => test.serial_number)
-                        : "Fail test (1): " +
-                          failedTests.map((test) => test.serial_number),
-                  });
-                } else if (
-                  failedTests.length > 0 &&
-                  this.$store.state.notification.enableFailNotification &&
-                  !this.$store.state.notification.notificationAPIStatus
-                ) {
-                  this.openNotificationWithIcon("error", failedTests);
-                }
-                this.data = res.data.tests[0];
-              }
-            } else {
-              this.data = res.data.tests[0];
-            }
-            this.spinning = false;
-          })
-          .catch((err) => {
-            console.log("error: ", err);
-          });
+    async checkProjectName() {
+      const project = this.formState.project;
+      if (!project) {
+        return Promise.reject("Please input the project name");
       }
     },
-    async toggleModal(txt_filename) {
-      this.modalVisible = !this.modalVisible;
-      this.contentFile = null;
-
-      if (this.modalVisible) {
-        this.modalDownloadLink = txt_filename;
-        let textFilenameSplit = txt_filename.split("/");
-        this.modalTitle = textFilenameSplit[textFilenameSplit.length - 1];
+    async checkProjectStation() {
+      const station = this.formState.station;
+      if (!station) {
+        return Promise.reject("Please input the station");
       }
-
-      let convertLink = this.modalDownloadLink
-        .replace("/", "-")
-        .replace("/", "-")
-        .replace("/", "-")
-        .replace("/", "-");
-      // convertLink = docs-Data-Dotboard-2021_06_21-DB1111111111_202106210830.txt
-
-      await axios({
-        method: "get",
-        url: "/api/file/download/" + convertLink,
-        responseType: "blob",
-      })
-        .then((res) => {
-          res.data.text().then((text) => (this.contentFile = text));
-        })
-        .catch((err) => {
-          console.log("error: ", err);
-        });
     },
-    openNotificationWithIcon(type, failedTests) {
+    async checkProjectFile() {
+      const file = this.formState.test;
+      if (!file) {
+        return Promise.reject("Please input the file");
+      }
+    },
+    openNotificationWithIcon(type, message, description) {
       notification[type]({
-        message: "Failed Test",
-        description:
-          failedTests.length > 1
-            ? `Fail tests (${failedTests.length}):` +
-              failedTests.map((test) => test.serial_number)
-            : "Fail test (1): " + failedTests.map((test) => test.serial_number),
+        message: message,
+        description: description,
       });
     },
-    onFocus() {
-      this.isOnFocus = true;
-    },
-    onBlur() {
-      this.isOnFocus = false;
-    },
-    testDateFormatted(test_date) {
-      return moment(test_date).format("YYYY/MM/DD HH:mm:ss");
-    },
-    onSelectChange(selectedRowKeys) {
-      this.selectedRowKeys = selectedRowKeys;
-    },
-    async download(dataType) {
-      let dataUrl = "";
+    async deleteFile() {
+      const token = localStorage.getItem("user");
 
-      if (dataType === "data") dataUrl = "data";
-      else if (dataType === "log") dataUrl = "log";
-      else if (dataType === "comport") dataUrl = "comport";
-      else if (dataType === "telnet") dataUrl = "telnet";
-
-      await axios({
+      axios({
         method: "post",
-        url: `/api/file/download/${dataUrl}`,
-        data: {
-          files: this.selectedRowKeys,
+        url: "/api/file/universal/delete",
+        headers: {
+          Authorization: `Token ${token}`,
         },
-      })
-        .then((res) => {
-          const zipAsBase64 = res.data.zip64;
-          const blob = b64ToBlob(zipAsBase64, "application/zip");
-          let fileUrl = window.URL.createObjectURL(new Blob([blob]));
-          let fileLink = document.createElement("a");
-          fileLink.href = fileUrl;
-          fileLink.setAttribute("download", `${dataUrl}_download.zip`);
-          document.body.appendChild(fileLink);
-          fileLink.click();
-        })
-        .catch((err) => {
-          console.log("error: ", err);
-        });
+        data: {
+          deleteId: this.selectedRowKeys,
+        },
+      }).then((res) => {
+        console.log(res);
+        if (res.data.message) {
+          this.getAllFiles();
+        } else if (res.data.error) {
+          this.openNotificationWithIcon(
+            "error",
+            "Error",
+            `Error delete file !`
+          );
+        }
+      });
     },
-    async downloadSingle() {
-      // modalDownloadLink = docs/Data/Dotboard/2021_06_21/DB1111111111_202106210830.txt
-      let convertLink = this.modalDownloadLink
-        .replace("/", "-")
-        .replace("/", "-")
-        .replace("/", "-")
-        .replace("/", "-");
-      // convertLink = Data-Dotboard-2021_06_21-DB1111111111_202106210830.txt
+    async downloadSingle(filepath) {
+      // modalDownloadLink = storage/2021_07_19/WIN_20210703_20_01_31_Pro.jpg
+      let convertLink = filepath.replace("/", "-").replace("/", "-");
+      // convertLink = storage-2021_07_19-WIN_20210703_20_01_31_Pro.jpg
 
       let convertLinkSplit = convertLink.split("-");
       let fileName = convertLinkSplit[convertLinkSplit.length - 1];
@@ -667,13 +605,23 @@ export default defineComponent({
           console.log("error: ", err);
         });
     },
-    async searchTests(newValue) {
-      this.spinning = true;
-      await axios
-        .get(`/api/tests/search/${newValue}`)
+    async download() {
+      await axios({
+        method: "post",
+        url: `/api/file/universal/download`,
+        data: {
+          files: this.selectedRowKeys,
+        },
+      })
         .then((res) => {
-          this.data = res.data.tests[0];
-          this.spinning = false;
+          const zipAsBase64 = res.data.zip64;
+          const blob = b64ToBlob(zipAsBase64, "application/zip");
+          let fileUrl = window.URL.createObjectURL(new Blob([blob]));
+          let fileLink = document.createElement("a");
+          fileLink.href = fileUrl;
+          fileLink.setAttribute("download", "bundle_download.zip");
+          document.body.appendChild(fileLink);
+          fileLink.click();
         })
         .catch((err) => {
           console.log("error: ", err);
@@ -696,48 +644,19 @@ export default defineComponent({
       clearFilters();
       this.dateRange = "";
     },
-  },
-  computed: {
-    hasSelected() {
-      return this.selectedRowKeys.length > 0;
+    testDateFormatted(test_date) {
+      return moment(test_date).format("YYYY/MM/DD HH:mm:ss");
+    },
+    onSelectChange(selectedRowKeys) {
+      this.selectedRowKeys = selectedRowKeys;
+    },
+    async getAllFiles() {
+      //   this.spinning = true;
+      //   await axios.get("/api/file/universal/all").then((res) => {
+      //     this.data = res.data.files;
+      //     this.spinning = false;
+      //   });
     },
   },
-  created() {
-    this.searchTests = debounce(this.searchTests, 700);
-  },
-  watch: {
-    autoRefresh(newValue) {
-      if (newValue.length === 1) {
-        this.disabled = false;
-        this.reRender = true;
-
-        clearTimeout(this.autoRefreshTimeout);
-        this.autoRefreshTimeout = setTimeout(() => {
-          this.fetchTests();
-        }, this.autoRefreshSeconds * 1000);
-      } else {
-        this.disabled = true;
-        clearTimeout(this.autoRefreshTimeout);
-        this.spinning = false;
-      }
-    },
-    autoRefreshSeconds(newValue) {
-      if (this.isOnFocus == false && newValue == null)
-        this.autoRefreshSeconds = 5;
-    },
-    data() {
-      if (this.autoRefresh[0] === "auto") {
-        setTimeout(() => {
-          this.fetchTests();
-        }, this.autoRefreshSeconds * 1000);
-      }
-    },
-  },
-});
+};
 </script>
-
-<style scoped>
-.pre-formatted {
-  white-space: pre;
-}
-</style>

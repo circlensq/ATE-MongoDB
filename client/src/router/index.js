@@ -45,6 +45,12 @@ const routes = [
         name: 'upload-files',
         meta: { title: 'Upload Files', affix: true}
       },
+      {
+        path: '/upload/files/test',
+        component: () => import('@/views/upload/UploadTestFiles.vue'),
+        name: 'upload-test',
+        meta: { title: 'Upload Test', affix: true}
+      },
     ]
   },
   {

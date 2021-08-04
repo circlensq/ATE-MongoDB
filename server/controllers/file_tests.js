@@ -54,6 +54,90 @@ const upload = (req, res, next) => {
     })
 }
 
+const converter = (req, res, next) => {
+    const form = new formidable.IncomingForm({ multiples: true })
+    form.parse(req, (err, fields, files) => {
+        console.log(files)
+        console.log(fields)
+        for (let file in files) {
+            try {
+                if (files[file]) {
+                    let oldPath = files[file]['path']
+                    let filename = files[file]['name']
+                    let rawData = fs.readFileSync(oldPath)
+
+                    console.log('filename', filename)
+                    let filenameSplit= filename.split("_")
+                    console.log('filenameSplit', filenameSplit)
+                    let fileYear = filenameSplit[1].slice(0,4)
+                    let fileMonth = filenameSplit[1].slice(4,6)
+                    let fileDate = filenameSplit[1].slice(6,8)
+                    let fileHour = filenameSplit[1].slice(8,10)
+                    let fileMinute = filenameSplit[1].slice(10,12)
+                    let fileSecond = filenameSplit[1].slice(12,14)
+                    console.log('fileYear', fileYear)
+                    console.log('fileMonth', fileMonth)
+                    console.log('fileDate', fileDate)
+                    let date = `${fileYear}_${fileMonth}_${fileDate}`
+                    let folderPath = __basedir + `\\media\\uploads\\docs\\${date}\\`;
+
+                    console.log('folderPath', folderPath)
+                    // folderPath = ..\dashboard-v2.0\server\\media\uploads\docs\\2021_06_18\\
+
+                    // If folder hasn't been created
+                    // if (!fs.existsSync(folderPath)) {
+                    //     fs.mkdirSync(folderPath, {
+                    //         recursive: true
+                    //     });
+                    // }
+
+                    // newPath =..\dashboard-v2.0\server\\media\uploads\storage\\2021_06_18\\WIN.jpg
+                    // let newPath = folderPath + files[file]['name']
+                    // let databasePath = `storage/${today}/${files[file]['name']}`;
+                    // let filename =  files[file]['name'] // example_files.zip
+
+                    // if (fs.existsSync(newPath)){
+                    //     // if file is existed then add Date.now()
+                    //     let time =  Date.now()
+                    //     let filenameSplit = filename.split('.')
+                        
+                    //     filename = filenameSplit[0] + '_' + time + '.' + filenameSplit[1] 
+                    //     // filename = WIN_1626750408096.jpg
+
+                    //     newPath = folderPath + filename
+                    //     databasePath = `storage/${today}/${filename}`;
+                    // }
+                    
+                    // fs.writeFile(newPath, rawData, async (err) => {
+                    //     if (err) {
+                    //         console.log(err);
+                    //         return res.status(400).send({ "err": err })
+                    //     }
+
+                    //     const userToken = jwt.verify(fields.user, config.TOKEN_SECRET)
+
+                    //     const newFiles = {
+                    //         filename: filename,
+                    //         user_id: ObjectId(userToken.id),
+                    //         filepath: databasePath,
+                    //         added_time: Date.now(),
+                    //     }
+
+                    //     const result = await db.collection("ate_files").insertOne(newFiles)
+                    //     console.log(`Created with the following id: ${result.insertedId}`)
+
+                    //     console.log(`Successfull upload ${newPath}`);
+                    // })
+                }
+            } catch (err) {
+                console.log(`Error: ${err}`);
+                return res.status(409).send({ "error": `${err}` })
+            }
+        }
+    })
+    return res.status(200).send({ "message": "Successfully uploaded the files" })
+}
+
 const readSingleFile = async (directoryPath, singleFilename, zip) => {
 
     const fsPromises = require('fs').promises;
@@ -115,6 +199,7 @@ const downloadSingle = (req, res) => {
 module.exports = {
     upload,
     download,
+    converter,
     downloadSingle,
     readSingleFile
 }

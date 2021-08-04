@@ -10,9 +10,23 @@ const { ObjectId } = require('mongodb')
 const ate_files = db.collection('ate_files')
 
 const upload = (req, res) => {
-    const form = new formidable.IncomingForm({ multiples: true })
+    // formidable : to parse html form data
+    const form = new formidable.IncomingForm({ multiples: true, maxFileSize: 10000 * 1024 * 1024 })
     const d = new Date();
+
     form.parse(req, (err, fields, files) => {
+        console.log('err', err)
+        console.log('files', files)
+        console.log('fields', fields)
+        if (err) {
+            console.log("Error parsing the files");
+            console.log(err);
+            return res.status(400).json({
+                message: "There was an error parsing the files",
+                status: "Fail",
+                error: err
+            })
+        }
         for (let file in files) {
             try {
                 if (files[file]) {
@@ -74,6 +88,7 @@ const upload = (req, res) => {
                 return res.status(409).send({ "error": `${err}` })
             }
         }
+        
     })
 
     return res.status(200).send({ "message": "Successfully uploadded the files" })
