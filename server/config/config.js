@@ -10,8 +10,8 @@ module.exports = {
     // HOST: 'http://192.168.100.150:80',
     TOKEN_SECRET: 'jzhpstrcrp0222225678',
     MINUTES_LOGIN_TIME: 3,
-    NORMAL_LOGIN_DAYS: 3,
-    KEEP_LOGIN_DAYS: 7,
+    NORMAL_LOGIN_DAYS: 7,
+    KEEP_LOGIN_DAYS: 30,
     TWO_FACTOR_AUTHENTICATION: false,
     MAX_EMAIL_EXISTS: 3
 }

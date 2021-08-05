@@ -8,12 +8,13 @@ const app = express()
 
 let mongoUtil = require('./mongoUtil')
 
+
 global.__basedir = path.join(__dirname, '../');
 
 mongoUtil.connectToServer(function (err, client) {
     if (err) console.log(err);
     app.use(cookieParser())
-
+    
     app.use(express.json())
     const authRoute = require('../routers/index')
 

@@ -11,13 +11,10 @@ const ate_files = db.collection('ate_files')
 
 const upload = (req, res) => {
     // formidable : to parse html form data
-    const form = new formidable.IncomingForm({ multiples: true, maxFileSize: 10000 * 1024 * 1024 })
+    const form = new formidable.IncomingForm({ multiples: true, maxFileSize: 10 * 1024 * 1024 * 1024 })
     const d = new Date();
 
     form.parse(req, (err, fields, files) => {
-        console.log('err', err)
-        console.log('files', files)
-        console.log('fields', fields)
         if (err) {
             console.log("Error parsing the files");
             console.log(err);
@@ -89,9 +86,9 @@ const upload = (req, res) => {
             }
         }
         
+        return res.status(200).send({ "message": "Successfully uploadded the files" })
     })
 
-    return res.status(200).send({ "message": "Successfully uploadded the files" })
 }
 
 const getAll = async (req, res) => {
@@ -154,7 +151,6 @@ const download = async (req, res) => {
     let zip = new JSZip();
 
     for (let id of files) {
-
         const testQuery = {
             _id: ObjectId(id),
         }

@@ -509,7 +509,7 @@ export default defineComponent({
     },
     async refreshTable() {
       this.loading = true;
-      await this.fetchTests().then(() => (this.loading = false));
+      await this.fetchTestsById().then(() => (this.loading = false));
     },
     async fetchTestsById() {
       if (this.selectedProjectId != null) {
