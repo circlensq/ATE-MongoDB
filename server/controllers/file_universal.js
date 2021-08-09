@@ -31,8 +31,9 @@ const upload = (req, res) => {
                     let rawData = fs.readFileSync(oldPath)
 
                     const month = parseInt(d.getMonth() + 1) < 10 ? '0' + parseInt(d.getMonth() + 1) : parseInt(d.getMonth() + 1)
+                    const date = parseInt(d.getDate()) < 10 ? '0' + parseInt(d.getDate()) : parseInt(d.getDate())
 
-                    let today = `${d.getFullYear()}_${month}_${d.getDate()}`
+                    let today = `${d.getFullYear()}_${month}_${date}`
                     let folderPath = __basedir + `\\media\\uploads\\storage\\${today}\\`;
                     // folderPath = ..\dashboard-v2.0\server\\media\uploads\storage\\2021_06_18\\
 
