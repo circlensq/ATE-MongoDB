@@ -7,12 +7,12 @@
       />
     </div>
     <a-form
+      id="fileForm"
       ref="formRef"
       :model="formState"
       :rules="rules"
       :label-col="labelCol"
       :wrapper-col="wrapperCol"
-      @finish="onSubmit"
       style="width: 500px"
     >
       <a-form-item label="Project" name="project">
@@ -23,6 +23,7 @@
           option-filter-prop="label"
           :filter-option="filterOption"
           @change="getStations"
+          name="project_id"
         >
           <a-select-option
             v-for="project in projects"
@@ -33,7 +34,7 @@
         </a-select>
       </a-form-item>
       <a-form-item label="Station" name="station">
-        <a-select v-model:value="formState.station">
+        <a-select v-model:value="formState.station" name="station_id">
           <a-select-option
             v-for="(station, index) in projectStations"
             placeholder="Select a station"
@@ -45,13 +46,20 @@
         </a-select>
       </a-form-item>
       <a-form-item label="Test" name="test">
-        <a-select v-model:value="formState.test" placeholder="Select .txt type">
+        <a-select
+          v-model:value="formState.test"
+          placeholder="Select .txt type"
+          name="test_file"
+        >
           <a-select-option value="data">Data</a-select-option>
           <a-select-option value="log">log</a-select-option>
           <a-select-option value="comport">ComportText</a-select-option>
           <a-select-option value="telnet">TelnetText</a-select-option>
         </a-select>
       </a-form-item>
+      <input type="hidden" name="project" :value="formState.project" />
+      <input type="hidden" name="station" :value="formState.station" />
+      <input type="hidden" name="test" :value="formState.test" />
     </a-form>
   </a-row>
   <a-row style="margin-bottom: 10px">
@@ -63,11 +71,6 @@
               <a-menu-item key="download" @click="download"
                 >Download Selected</a-menu-item
               >
-              <a-tooltip title="Danger!" color="red" placement="right">
-                <a-menu-item key="delete" @click="deleteFile"
-                  >Delete</a-menu-item
-                >
-              </a-tooltip>
             </a-menu>
           </template>
           <a-button v-if="hasSelected" :disabled="!hasSelected">
@@ -81,16 +84,6 @@
           </template>
         </span>
       </a-space>
-    </a-col>
-    <a-col :span="18">
-      <a-row type="flex" justify="end">
-        <a-space align="center" size="small">
-          Click 'Refresh' to see uploaded files
-          <a-button type="primary" :loading="loading" @click="refreshTable">
-            Refresh
-          </a-button>
-        </a-space>
-      </a-row>
     </a-col>
   </a-row>
   <a-spin tip="Loading..." :spinning="spinning">
@@ -225,14 +218,14 @@
 
 <script>
 import { Dashboard } from "@uppy/vue";
-import { notification } from "ant-design-vue";
+import Uppy from "@uppy/core";
+import XHRUpload from "@uppy/xhr-upload";
 
 import "@uppy/core/dist/style.min.css";
 import "@uppy/dashboard/dist/style.min.css";
 
-import Uppy from "@uppy/core";
-import XHRUpload from "@uppy/xhr-upload";
 import { SearchOutlined, DownloadOutlined } from "@ant-design/icons-vue";
+import { notification } from "ant-design-vue";
 import axios from "axios";
 import moment from "moment";
 import b64ToBlob from "b64-to-blob";
@@ -278,11 +271,6 @@ export default {
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
-          onFilterDropdownVisibleChange: (visible) => {
-            if (visible) {
-              console.log(visible);
-            }
-          },
         },
         {
           width: 120,
@@ -481,8 +469,50 @@ export default {
     };
   },
   mounted() {
-    this.getAllFiles();
     this.fetchProjects();
+    
+    this.uppy.on("upload", async () => {
+      this.uppy.setMeta({
+        project: this.formState.project,
+        station: this.formState.station,
+        test: this.formState.test,
+      });
+    });
+
+    this.uppy.on("complete", (result) => {
+      let fileFailedString = result.failed.length > 1 ? "files are" : "file is";
+      let fileSuccessString =
+        result.successful.length > 1 ? "files are" : "file is";
+
+      console.log(result.failed);
+      if (result.failed.length) {
+        let errorMessage = result.failed[0].response.body.error;
+
+        if (errorMessage && result.failed[0].response.status === 400) {
+          this.openNotificationWithIcon("error", "Error", `${errorMessage}`);
+        } else {
+          this.openNotificationWithIcon(
+            "error",
+            "Error",
+            `${result.failed.length} ${fileFailedString} not uploded. Check the files!`
+          );
+          console.error("Errors:");
+          result.failed.forEach((file) => {
+            console.error(file.error);
+          });
+        }
+      } else {
+        this.openNotificationWithIcon(
+          "success",
+          "Success",
+          `${result.successful.length} ${fileSuccessString} successfuly uploded !`
+        );
+
+        this.formState.project = null;
+        this.formState.station = null;
+        this.formState.test = null;
+      }
+    });
   },
   computed: {
     hasSelected() {
@@ -492,26 +522,31 @@ export default {
       const token = localStorage.getItem("user");
       return new Uppy({
         restrictions: {
-          maxFileSize: 1000000000, // 1000mb
+          maxFileSize: 1000000000, // 1000mb = 1GB
         },
         meta: {
-          user: token,
+          user: localStorage.getItem("user"),
         },
-      })
-        .use(XHRUpload, {
-          endpoint: "/api/file/converter/upload",
-          fieldName: "files",
-          formData: true,
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        })
+      }).use(XHRUpload, {
+        endpoint: "/api/file/converter/upload",
+        fieldName: "files",
+        formData: true,
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
     },
   },
   beforeUnmount() {
     this.uppy.close();
   },
   methods: {
+    async fetchProjects() {
+      await axios.get("/api/project/all").then((res) => {
+        this.projects = res.data.projects[0];
+        this.selectedProjectId = res.data.projects[0][0]._id;
+      });
+    },
     async getStations(value) {
       await axios.get(`/api/project/search/${value}`).then((res) => {
         this.projectStations = res.data.project.stations;
@@ -519,17 +554,6 @@ export default {
     },
     filterOption(input, option) {
       return option.props.value.toLowerCase().indexOf(input.toLowerCase()) >= 0;
-    },
-    async fetchProjects() {
-      this.spinning = true;
-      await axios.get("/api/project/all").then((res) => {
-        this.projects = res.data.projects[0];
-      });
-      this.spinning = false;
-    },
-    async refreshTable() {
-      this.loading = true;
-      await this.getAllFiles().then(() => (this.loading = false));
     },
     async checkProjectName() {
       const project = this.formState.project;
@@ -553,31 +577,6 @@ export default {
       notification[type]({
         message: message,
         description: description,
-      });
-    },
-    async deleteFile() {
-      const token = localStorage.getItem("user");
-
-      axios({
-        method: "post",
-        url: "/api/file/universal/delete",
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-        data: {
-          deleteId: this.selectedRowKeys,
-        },
-      }).then((res) => {
-        console.log(res);
-        if (res.data.message) {
-          this.getAllFiles();
-        } else if (res.data.error) {
-          this.openNotificationWithIcon(
-            "error",
-            "Error",
-            `Error delete file !`
-          );
-        }
       });
     },
     async downloadSingle(filepath) {
@@ -650,12 +649,12 @@ export default {
     onSelectChange(selectedRowKeys) {
       this.selectedRowKeys = selectedRowKeys;
     },
-    async getAllFiles() {
-      //   this.spinning = true;
-      //   await axios.get("/api/file/universal/all").then((res) => {
-      //     this.data = res.data.files;
-      //     this.spinning = false;
-      //   });
+    async getAllAddedTestFiles() {
+      this.spinning = true;
+      await axios.get("/api/tests/added/all").then((res) => {
+        this.data = res.data.tests;
+        this.spinning = false;
+      });
     },
   },
 };

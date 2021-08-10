@@ -5,7 +5,7 @@ var csrfProtection = csurf({ cookie: true })
 const { verifyUserToken, IsSuperuser, IsStaff, IsActive } = require("../middleware/auth");
 
 const userController = require('../controllers/user')
-const dataController = require('../controllers/tests')
+const testController = require('../controllers/tests')
 const fileController = require('../controllers/file_tests')
 const fileUniversalController = require('../controllers/file_universal')
 const projectController = require('../controllers/project')
@@ -40,11 +40,11 @@ router.get('/staff', verifyUserToken, IsStaff, userController.userEvent)
 router.get('/events', verifyUserToken, IsActive, userController.userEvent)
 
 // Test Data route
-router.get('/tests/all', dataController.getAll)
-router.get('/tests/updateData', dataController.getUpdateData)
-router.get('/tests/search/:query', dataController.searchTest)
-router.get('/tests/:id/', dataController.getById)
-router.get('/tests/search/:project_id/:test_station', dataController.passedPercentages)
+router.get('/tests/all', testController.getAll)
+router.get('/tests/updateData', testController.getUpdateData)
+router.get('/tests/search/:query', testController.searchTest)
+router.get('/tests/:id/', testController.getById)
+router.get('/tests/search/:project_id/:test_station', testController.passedPercentages)
 
 // * Test .txt files Upload & Download File API route (for C#) -> ONLY FOR Data, log, ComportText, TelnetText
 router.post('/file/upload', verifyUserToken, IsStaff, fileController.upload)

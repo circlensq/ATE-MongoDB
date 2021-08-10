@@ -2,9 +2,14 @@ const formidable = require('formidable')
 const fs = require('fs')
 const JSZip = require("jszip");
 const { ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken')
+
 // MongoDB Connection
 const mongoUtil = require('../src/mongoUtil')
+const config = require('../config/config')
 const db = mongoUtil.getDb()
+const ate_projects = db.collection(config.DB_PROJECT_COLLECTION)
+
 
 const upload = (req, res, next) => {
     const form = new formidable.IncomingForm({ multiples: true })
@@ -44,10 +49,9 @@ const upload = (req, res, next) => {
                         console.log(`Successful upload ${newPath}`);
                     })
                 }
-            } catch(err) {
+            } catch (err) {
                 console.log(`Error: ${err}`);
             }
-
         }
 
         return res.status(200).send({ "message": "Successfully uploaded the files" })
@@ -56,86 +60,191 @@ const upload = (req, res, next) => {
 
 const converter = (req, res, next) => {
     const form = new formidable.IncomingForm({ multiples: true })
-    form.parse(req, (err, fields, files) => {
-        console.log(files)
-        console.log(fields)
-        for (let file in files) {
-            try {
-                if (files[file]) {
-                    let oldPath = files[file]['path']
-                    let filename = files[file]['name']
-                    let rawData = fs.readFileSync(oldPath)
+    form.parse(req, async (err, fields, files) => {
+        const project = await ate_projects.findOne({ name: fields.project })
 
-                    console.log('filename', filename)
-                    let filenameSplit= filename.split("_")
-                    console.log('filenameSplit', filenameSplit)
-                    let fileYear = filenameSplit[1].slice(0,4)
-                    let fileMonth = filenameSplit[1].slice(4,6)
-                    let fileDate = filenameSplit[1].slice(6,8)
-                    let fileHour = filenameSplit[1].slice(8,10)
-                    let fileMinute = filenameSplit[1].slice(10,12)
-                    let fileSecond = filenameSplit[1].slice(12,14)
-                    console.log('fileYear', fileYear)
-                    console.log('fileMonth', fileMonth)
-                    console.log('fileDate', fileDate)
-                    let date = `${fileYear}_${fileMonth}_${fileDate}`
-                    let folderPath = __basedir + `\\media\\uploads\\docs\\${date}\\`;
+        let mandatoryFields = []
+        if (fields.project === "null") {
+            mandatoryFields.push("'Project'")
+        }
+        if (fields.station === "null") {
+            mandatoryFields.push("'Station'")
+        }
+        if (fields.test === "null") {
+            mandatoryFields.push("'Test'")
+        }
 
-                    console.log('folderPath', folderPath)
-                    // folderPath = ..\dashboard-v2.0\server\\media\uploads\docs\\2021_06_18\\
-
-                    // If folder hasn't been created
-                    // if (!fs.existsSync(folderPath)) {
-                    //     fs.mkdirSync(folderPath, {
-                    //         recursive: true
-                    //     });
-                    // }
-
-                    // newPath =..\dashboard-v2.0\server\\media\uploads\storage\\2021_06_18\\WIN.jpg
-                    // let newPath = folderPath + files[file]['name']
-                    // let databasePath = `storage/${today}/${files[file]['name']}`;
-                    // let filename =  files[file]['name'] // example_files.zip
-
-                    // if (fs.existsSync(newPath)){
-                    //     // if file is existed then add Date.now()
-                    //     let time =  Date.now()
-                    //     let filenameSplit = filename.split('.')
-                        
-                    //     filename = filenameSplit[0] + '_' + time + '.' + filenameSplit[1] 
-                    //     // filename = WIN_1626750408096.jpg
-
-                    //     newPath = folderPath + filename
-                    //     databasePath = `storage/${today}/${filename}`;
-                    // }
-                    
-                    // fs.writeFile(newPath, rawData, async (err) => {
-                    //     if (err) {
-                    //         console.log(err);
-                    //         return res.status(400).send({ "err": err })
-                    //     }
-
-                    //     const userToken = jwt.verify(fields.user, config.TOKEN_SECRET)
-
-                    //     const newFiles = {
-                    //         filename: filename,
-                    //         user_id: ObjectId(userToken.id),
-                    //         filepath: databasePath,
-                    //         added_time: Date.now(),
-                    //     }
-
-                    //     const result = await db.collection("ate_files").insertOne(newFiles)
-                    //     console.log(`Created with the following id: ${result.insertedId}`)
-
-                    //     console.log(`Successfull upload ${newPath}`);
-                    // })
+        if (mandatoryFields.length > 0) {
+            let mandatoryMsg = ""
+            for (let i = 0; i < mandatoryFields.length; i++) {
+                if (i === mandatoryFields.length - 2) {
+                    mandatoryMsg += mandatoryFields[i] + ", and "
                 }
-            } catch (err) {
-                console.log(`Error: ${err}`);
-                return res.status(409).send({ "error": `${err}` })
+                else {
+                    if (mandatoryFields.length === 1)
+                        mandatoryMsg += mandatoryFields[i]
+                    else 
+                        mandatoryMsg += mandatoryFields[i] + ", "
+                }
             }
+            return res.status(400).send({ "error": `Please choose ${mandatoryMsg} select option` })
+        }
+        else {
+            for (let file in files) {
+                try {
+                    if (files[file]) {
+                        let oldPath = files[file]['path']
+                        let rawData = fs.readFileSync(oldPath)
+
+                        let filename = files[file]['name']
+                        let resultTest = ""
+                        let testTimeMinutes = 0.00
+                        let errorCode = ""
+
+                        if (fields.test === 'data') {
+                            fs.readFile(oldPath, 'utf8', (err, data) => {
+                                if (err) return console.log(err)
+                                let dataSplit = data.split("\n")
+                                testTimeMinutes = parseFloat(dataSplit[1].split(",")[1].replace("m", ""))
+                                resultTest = dataSplit[1].split(",")[3]
+                                errorCode = dataSplit[1].split(",")[4]
+                            })
+                        }
+
+                        let filenameSplit = filename.split("_")
+
+                        // Regular expression
+                        const numberRegex = /\d/; //regex to check that number exists
+                        let serialNumber = ""
+                        let macAddress = ""
+
+                        if (numberRegex.test(filenameSplit[0].slice(0, 2))) {
+                            if (filenameSplit.length == 3) {
+                                // CB1234567890_B123456789_20210809103401.txt
+                                macAddress = filenameSplit[1]
+                            } else {
+                                // B123456789_20210809103401.txt
+                                macAddress = filenameSplit[0]
+                            }
+                        }
+                        else {
+                            serialNumber = filenameSplit[0]
+                        }
+
+                        let fileYear = filenameSplit[1].slice(0, 4)
+                        let fileMonth = filenameSplit[1].slice(4, 6)
+                        let fileDate = filenameSplit[1].slice(6, 8)
+                        let fileHour = filenameSplit[1].slice(8, 10)
+                        let fileMinute = filenameSplit[1].slice(10, 12)
+                        let fileSecond = filenameSplit[1].slice(12, 14)
+                        let testDate = `${fileYear}-${fileMonth}-${fileDate}T${fileHour}:${fileMinute}:${fileSecond}`
+
+                        let date = `${fileYear}_${fileMonth}_${fileDate}`
+
+                        // folderPath = ..\dashboard-v2.0\server\\media\uploads\docs\\log\\Product_WIFI_2G\\2021_06_18\\
+                        let folderPath = __basedir + `\\media\\uploads\\docs\\${fields.test}\\${fields.station}\\${date}\\`;
+
+                        // If folder hasn't been created
+                        if (!fs.existsSync(folderPath)) {
+                            fs.mkdirSync(folderPath, {
+                                recursive: true
+                            });
+                        }
+
+                        // newPath = ..\dashboard-v2.0\server\\media\uploads\docs\\log\\Product_WIFI_2G\\2021_06_18\\CB0123456781_20210604165222.txt
+                        let newPath = folderPath + files[file]['name']
+
+                        let oriFilename = files[file]['name'].replace(".txt", "") // CB0123456781_20210604165222.txt
+                        let databasePath = `docs/${fields.test}/${fields.station}/${date}/${files[file]['name']}`;
+
+                        if (fs.existsSync(newPath)) {
+                            // if file is existed then add Date.now()
+                            let time = Date.now()
+
+                            let tempFilenameSplit = files[file]['name'].split(".")
+                            filename = tempFilenameSplit[0] + '_' + time + '.' + tempFilenameSplit[1]
+                            // filename = CB0123456781_20210604165222_1626750408096.txt
+
+                            //change newPath if file exists
+                            newPath = folderPath + filename
+                            databasePath = `docs/${fields.test}/${fields.station}/${date}/${filename}`;
+                        }
+
+                        fs.writeFile(newPath, rawData, async (err) => {
+                            if (err) {
+                                console.log(err);
+                                return res.status(400).send({ "err": err })
+                            }
+
+                            const userToken = jwt.verify(fields.user, config.TOKEN_SECRET)
+                            const queryExisted = {
+                                project_id: ObjectId(project._id),
+                                test_station: fields.station,
+                                serial_number: serialNumber,
+                                mac_address: macAddress,
+                                $or: [
+                                    { data_txt_filename: { $regex: `${oriFilename}`, $options: 'i' } },
+                                    { log_txt_filename: { $regex: `${oriFilename}`, $options: 'i' } },
+                                    { comport_txt_filename: { $regex: `${oriFilename}`, $options: 'i' } },
+                                    { telnet_txt_filename: { $regex: `${oriFilename}`, $options: 'i' } },
+                                ]
+                            }
+
+                            let existedData = await db.collection("ate_tests").findOne(queryExisted)
+
+                            if (existedData != null) {
+                                if (existedData._id) {
+                                    const updateFile = {
+                                        result: resultTest,
+                                        error_code: errorCode,
+                                        test_time_minutes: testTimeMinutes,
+                                        test_date: new Date(Date.parse(testDate)).toISOString(),
+                                        added_time: new Date(Date.now()).toISOString(),
+                                    }
+
+                                    updateFile[`${fields.test}_txt_filename`] = databasePath
+
+                                    db.collection("ate_tests").updateOne({
+                                        _id: ObjectId(existedData._id)
+                                    }, {
+                                        $set: updateFile
+                                    }, function (err, result) {
+                                        if (err) throw err;
+                                        console.log(`Successfull upload ${newPath}`);
+                                        console.log(`Edit project: ${result.modifiedCount}`, result.modifiedCount > 1 ? 'projects' : 'project')
+                                    });
+                                }
+                            }
+                            else {
+                                const newFiles = {
+                                    project_id: ObjectId(project._id),
+                                    test_station: fields.station,
+                                    user_id: ObjectId(userToken.id),
+                                    serial_number: serialNumber,
+                                    mac_address: macAddress,
+                                    result: resultTest,
+                                    error_code: errorCode,
+                                    test_time_minutes: testTimeMinutes,
+                                    test_date: Date.parse(testDate),
+                                    added_time: Date.now(),
+                                }
+
+                                newFiles[`${fields.test}_txt_filename`] = databasePath
+
+                                const result = await db.collection("ate_tests").insertOne(newFiles)
+                                console.log(`Created with the following id: ${result.insertedId}`)
+                                console.log(`Successfull upload ${newPath}`);
+                            }
+                        })
+                    }
+                } catch (err) {
+                    console.log(`Error: ${err}`);
+                    return res.status(409).send({ "error": `${err}` })
+                }
+            }
+            return res.status(200).send({ "message": "Successfully uploaded the files" })
         }
     })
-    return res.status(200).send({ "message": "Successfully uploaded the files" })
 }
 
 const readSingleFile = async (directoryPath, singleFilename, zip) => {

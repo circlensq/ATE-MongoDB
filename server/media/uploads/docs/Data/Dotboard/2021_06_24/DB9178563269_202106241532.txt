@@ -1,2 +1,0 @@
-TTime,ETime,SN,Result,ErrorCode,Sleep,
-2021-06-24-15:32:26,0.01m,DB9178563269,PASS,0,PASS,

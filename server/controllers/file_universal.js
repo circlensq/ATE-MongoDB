@@ -77,7 +77,6 @@ const upload = (req, res) => {
 
                         const result = await db.collection("ate_files").insertOne(newFiles)
                         console.log(`Created with the following id: ${result.insertedId}`)
-
                         console.log(`Successfull upload ${newPath}`);
                     })
                 }
