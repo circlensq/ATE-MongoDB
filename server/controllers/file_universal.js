@@ -34,8 +34,8 @@ const upload = (req, res) => {
                     const date = parseInt(d.getDate()) < 10 ? '0' + parseInt(d.getDate()) : parseInt(d.getDate())
 
                     let today = `${d.getFullYear()}_${month}_${date}`
-                    let folderPath = __basedir + `\\media\\uploads\\storage\\${today}\\`;
-                    // folderPath = ..\dashboard-v2.0\server\\media\uploads\storage\\2021_06_18\\
+                    let folderPath = __basedir + `/media/uploads/storage/${today}/`;
+                    // folderPath = ..\dashboard-v2.0\server/media/uploads/storage/2021_06_18/
 
                     if (!fs.existsSync(folderPath)) {
                         fs.mkdirSync(folderPath, {
@@ -43,7 +43,7 @@ const upload = (req, res) => {
                         });
                     }
 
-                    // newPath =..\dashboard-v2.0\server\\media\uploads\storage\\2021_06_18\\WIN.jpg
+                    // newPath =..\dashboard-v2.0\server/media/uploads/storage/2021_06_18/WIN.jpg
                     let newPath = folderPath + files[file]['name']
                     let databasePath = `storage/${today}/${files[file]['name']}`;
                     let filename =  files[file]['name'] // example_files.zip

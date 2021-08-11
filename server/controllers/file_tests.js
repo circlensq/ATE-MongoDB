@@ -141,8 +141,8 @@ const converter = (req, res, next) => {
 
                         let date = `${fileYear}_${fileMonth}_${fileDate}`
 
-                        // folderPath = ..\dashboard-v2.0\server\\media\uploads\docs\\log\\Product_WIFI_2G\\2021_06_18\\
-                        let folderPath = __basedir + `\\media\\uploads\\docs\\${fields.test}\\${fields.station}\\${date}\\`;
+                        // folderPath = ..\dashboard-v2.0\server/media/uploads/docs/log/Product_WIFI_2G/2021_06_18/
+                        let folderPath = __basedir + `/media/uploads/docs/${fields.test}/${fields.station}/${date}/`;
 
                         // If folder hasn't been created
                         if (!fs.existsSync(folderPath)) {
@@ -151,7 +151,7 @@ const converter = (req, res, next) => {
                             });
                         }
 
-                        // newPath = ..\dashboard-v2.0\server\\media\uploads\docs\\log\\Product_WIFI_2G\\2021_06_18\\CB0123456781_20210604165222.txt
+                        // newPath = ..\dashboard-v2.0\server/media/uploads/docs/log/Product_WIFI_2G/2021_06_18/CB0123456781_20210604165222.txt
                         let newPath = folderPath + files[file]['name']
 
                         let oriFilename = files[file]['name'].replace(".txt", "") // CB0123456781_20210604165222.txt
@@ -195,11 +195,8 @@ const converter = (req, res, next) => {
                             if (existedData != null) {
                                 if (existedData._id) {
                                     const updateFile = {
-                                        result: resultTest,
-                                        error_code: errorCode,
-                                        test_time_minutes: testTimeMinutes,
-                                        test_date: new Date(Date.parse(testDate)).toISOString(),
-                                        added_time: new Date(Date.now()).toISOString(),
+                                        test_date: new Date(new Date(Date.parse(testDate)).toISOString()),
+                                        added_time: new Date(new Date(Date.now()).toISOString()),
                                     }
 
                                     updateFile[`${fields.test}_txt_filename`] = databasePath
@@ -225,8 +222,8 @@ const converter = (req, res, next) => {
                                     result: resultTest,
                                     error_code: errorCode,
                                     test_time_minutes: testTimeMinutes,
-                                    test_date: Date.parse(testDate),
-                                    added_time: Date.now(),
+                                    test_date: new Date(new Date(Date.parse(testDate)).toISOString()),
+                                    added_time: new Date(new Date(Date.now()).toISOString()),
                                 }
 
                                 newFiles[`${fields.test}_txt_filename`] = databasePath
