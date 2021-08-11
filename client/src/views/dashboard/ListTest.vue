@@ -535,9 +535,29 @@ export default defineComponent({
                     body:
                       failedTests.length > 1
                         ? `Fail tests (${failedTests.length}):` +
-                          failedTests.map((test) => test.serial_number)
+                          failedTests.map((test) => {
+                            if (test.serial_number === ""){
+                              return test.mac_address
+                            }
+                            else if (test.serial_number != "" && test.mac_address != "")
+                              return test.serial_number + '-' + test.mac_address
+                            
+                            console.log('serial_number', test.serial_number)
+
+                            return test.serial_number
+                          })
                         : "Fail test (1): " +
-                          failedTests.map((test) => test.serial_number),
+                          failedTests.map((test) => {
+                            if (test.serial_number === ""){
+                              console.log('mac_address', test.mac_address)
+                              return test.mac_address
+                            }
+                            else if (test.serial_number != "" && test.mac_address != "")
+                              return test.serial_number + '-' + test.mac_address
+
+                            console.log('serial_number', test.serial_number)
+                            return test.serial_number
+                          }),
                   });
                 } else if (
                   failedTests.length > 0 &&
@@ -713,7 +733,7 @@ export default defineComponent({
 
         clearTimeout(this.autoRefreshTimeout);
         this.autoRefreshTimeout = setTimeout(() => {
-          this.fetchTests();
+          this.fetchTestsById();
         }, this.autoRefreshSeconds * 1000);
       } else {
         this.disabled = true;
@@ -728,7 +748,7 @@ export default defineComponent({
     data() {
       if (this.autoRefresh[0] === "auto") {
         setTimeout(() => {
-          this.fetchTests();
+          this.fetchTestsById();
         }, this.autoRefreshSeconds * 1000);
       }
     },
