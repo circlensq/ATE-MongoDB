@@ -51,10 +51,10 @@
           placeholder="Select .txt type"
           name="test_file"
         >
-          <a-select-option value="data">Data</a-select-option>
+          <a-select-option value="Data">Data</a-select-option>
           <a-select-option value="log">log</a-select-option>
-          <a-select-option value="comport">ComportText</a-select-option>
-          <a-select-option value="telnet">TelnetText</a-select-option>
+          <a-select-option value="ComportText">ComportText</a-select-option>
+          <a-select-option value="Telnet">TelnetText</a-select-option>
         </a-select>
       </a-form-item>
       <input type="hidden" name="project" :value="formState.project" />
