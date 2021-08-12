@@ -1,7 +1,7 @@
 module.exports = {
     DB_HOST: 'mongodb://localhost:27017',
     // DB_HOST: 'mongodb://jzate:jzhipster@192.168.100.150:27017/?authSource=admin',
-    DB_HOST: 'mongodb://jzate:jzhipster@172.105.225.25:27017/?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false',
+    // DB_HOST: 'mongodb://jzate:jzhipster@172.105.225.25:27017/?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false',
     DB_NAME: 'ate_mongodb_2',
     DB_TEST_COLLECTION: 'ate_tests',
     DB_PROJECT_COLLECTION: 'ate_projects',
