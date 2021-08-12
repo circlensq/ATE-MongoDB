@@ -1,2 +1,4 @@
 use ate_tests
 db.ate_tests.updateMany({project_id: 1}, {$set: { project_id: ObjectId("60dd4f35d224b9c78c2a60b3")}} )
+
+cd /home/ate/dashboard_v2_data/server/media/uploads

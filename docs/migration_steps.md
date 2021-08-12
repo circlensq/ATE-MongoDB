@@ -40,13 +40,17 @@ module.exports = {
 ## Data
 1. Export `dashboard_test` collection from `ate_mongodb` database.
 2. Download all of .txt files (with their folder) from `home/richard/dockerData/django/server-media/docs`.
+You could zip using this below command 
+```
+sudo zip -r docs.zip docs
+``` 
 <br>
 ![v1_Folder_structure](img/v1folder_structure.png)
 
-3. Run docker-compose to run `client` and `server` containers.
-4. Create folder `/media` inside `server` folder if you don't find any.
-
-5. Put the .txt files (from step 2) with their folder inside `home/richard/dashboard-v2.0-data/server/media/uploads/`
+3. Create folder `/docs` inside `home/richard/dashboard-v2.0-data/server/media/uploads/` folder if you don't find any (use your own priviledge. DO NOT USE `root` priviledge if you are not `root`).
+4. Run docker-compose to run `client` and `server` containers.
+5. Create folder `/media` inside `server` folder if you don't find any (use your own priviledge. DO NOT USE `root` priviledge if you are not `root`).
+6. Put the .txt files (from step 2) with their folder inside `home/richard/dashboard-v2.0-data/server/media/uploads/`.
 So the folder structure will be:
 ```
 ├── server # 
@@ -59,18 +63,18 @@ So the folder structure will be:
 |               └── TelnetText
 ```
 
-6. Open MongoDB Compass and connect with your MongoDB server database.
+7. Open MongoDB Compass and connect with your MongoDB server database.
 
-7. Create new collection named `ate_tests`, and import `dashboard_tests` collection exported data (from step 1)
+8. Create new collection named `ate_tests`, and import `dashboard_tests` collection exported data (from step 1)
 
-8. Go to _http://<ip_address>/project/create_ and make project for existing project. See [create_new_project.md](./create_new_project.md) to make a new project.
+9. Go to _http://<ip_address>/project/create_ and make project for existing project. See [create_new_project.md](./create_new_project.md) to make a new project.
 
-9. Open MongoDB Compass and look at the `ate_projects` collection
+10. Open MongoDB Compass and look at the `ate_projects` collection
 ![ate_projects](./img/ate_projects.png).
 
-10. Copy `_id` value e.g. `ObjectId("60f796d48b19213d0ec138d5")` and we will use this id to be added on existing data.
+11. Copy `_id` value e.g. `ObjectId("60f796d48b19213d0ec138d5")` and we will use this id to be added on existing data.
 
-11. Open MongoSH at bottom of MongoDB program
+12. Open MongoSH at bottom of MongoDB program
 and run this command 
 
 ```
@@ -83,4 +87,3 @@ db.ate_tests.updateMany({project_id: 1}, {$set: { project_id: ObjectId("60f796d4
 
 #### IMPORTANT:
 1. Make sure you've already created `/media` folder inside  `server` folder. If not, you probably will face `Error Access Permission` while uploading test files.
-
