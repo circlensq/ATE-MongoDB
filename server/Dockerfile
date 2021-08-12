@@ -1,6 +1,6 @@
 FROM node:latest as base
 
-WORKDIR /src
+WORKDIR /
 COPY package*.json /
 EXPOSE 8080
 

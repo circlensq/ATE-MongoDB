@@ -20,16 +20,14 @@ services:
     container_name: server
     build:
       context: ./server/
-      target: dev
+      target: production
     volumes:
-      - ./server/:/src/
-      - /src/node_modules
-      - /home/ate/dashboard-v2.0-data/server/media/:/media/
-    command: npm run start:dev
+      - /home/ate/dashboard-v2.0-data/server/media/:/media
+    command: npm run start:production
     ports:
       - "8080:8000"
     environment:
-      NODE_ENV: dev
+      NODE_ENV: production
       DEBUG: server:*
     
   client:
