@@ -43,16 +43,16 @@
         <a-dropdown>
           <template #overlay>
             <a-menu>
-              <a-menu-item key="download_data" @click="download('data')"
+              <a-menu-item key="download_data" @click="download('Data')"
                 >Download Data(.txt)</a-menu-item
               >
               <a-menu-item key="download_log" @click="download('log')"
                 >Download Log(.txt)</a-menu-item
               >
-              <a-menu-item key="download_comport" @click="download('comport')"
+              <a-menu-item key="download_comport" @click="download('ComportText')"
                 >Download Comport(.txt)</a-menu-item
               >
-              <a-menu-item key="download_telnet" @click="download('telnet')"
+              <a-menu-item key="download_telnet" @click="download('TelnetText')"
                 >Download Telnet(.txt)</a-menu-item
               >
               <a-tooltip title="Danger!" color="red" placement="right">
@@ -206,7 +206,7 @@
         <span v-if="searchText && searchedColumn === column.dataIndex">
           <template
             v-for="(fragment, i) in text
-              .toString()
+            .toString()
               .split(new RegExp(`(?<=${searchText})|(?=${searchText})`, 'i'))"
           >
             <mark
@@ -630,16 +630,10 @@ export default defineComponent({
       this.selectedRowKeys = selectedRowKeys;
     },
     async download(dataType) {
-      let dataUrl = "";
-
-      if (dataType === "data") dataUrl = "data";
-      else if (dataType === "log") dataUrl = "log";
-      else if (dataType === "comport") dataUrl = "comport";
-      else if (dataType === "telnet") dataUrl = "telnet";
-
+    
       await axios({
         method: "post",
-        url: `/api/file/download/${dataUrl}`,
+        url: `/api/file/download/${dataType}`,
         data: {
           files: this.selectedRowKeys,
         },
@@ -650,7 +644,7 @@ export default defineComponent({
           let fileUrl = window.URL.createObjectURL(new Blob([blob]));
           let fileLink = document.createElement("a");
           fileLink.href = fileUrl;
-          fileLink.setAttribute("download", `${dataUrl}_download.zip`);
+          fileLink.setAttribute("download", `${dataType}_download.zip`);
           document.body.appendChild(fileLink);
           fileLink.click();
         })

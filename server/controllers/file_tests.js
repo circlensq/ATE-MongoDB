@@ -10,6 +10,12 @@ const config = require('../config/config')
 const db = mongoUtil.getDb()
 const ate_projects = db.collection(config.DB_PROJECT_COLLECTION)
 
+const mapTest = new Map();
+
+mapTest.set('Data', 'data');
+mapTest.set('log', 'log');
+mapTest.set('ComportText', 'comport');
+mapTest.set('TelnetText', 'telnet');
 
 const upload = (req, res, next) => {
     const form = new formidable.IncomingForm({ multiples: true })
@@ -60,6 +66,9 @@ const upload = (req, res, next) => {
 
 const converter = (req, res, next) => {
     const form = new formidable.IncomingForm({ multiples: true })
+    
+    
+
     form.parse(req, async (err, fields, files) => {
         const project = await ate_projects.findOne({ name: fields.project })
 
@@ -101,7 +110,7 @@ const converter = (req, res, next) => {
                         let testTimeMinutes = 0.00
                         let errorCode = ""
 
-                        if (fields.test === 'data') {
+                        if (fields.test === 'Data') {
                             fs.readFile(oldPath, 'utf8', (err, data) => {
                                 if (err) return console.log(err)
                                 let dataSplit = data.split("\n")
@@ -199,7 +208,14 @@ const converter = (req, res, next) => {
                                         added_time: new Date(new Date(Date.now()).toISOString()),
                                     }
 
-                                    updateFile[`${fields.test}_txt_filename`] = databasePath
+                                    updateFile[`${mapTest.get(fields.test)}_txt_filename`] = databasePath
+                                    if (resultTest != "") 
+                                        updateFile['result'] = resultTest
+                                    if (errorCode != "")
+                                        updateFile['error_code'] = errorCode
+                                    if (testTimeMinutes > 0)
+                                        updateFile['test_time_minutes'] = testTimeMinutes
+
 
                                     db.collection("ate_tests").updateOne({
                                         _id: ObjectId(existedData._id)
@@ -226,7 +242,7 @@ const converter = (req, res, next) => {
                                     added_time: new Date(new Date(Date.now()).toISOString()),
                                 }
 
-                                newFiles[`${fields.test}_txt_filename`] = databasePath
+                                newFiles[`${mapTest.get(fields.test)}_txt_filename`] = databasePath
 
                                 const result = await db.collection("ate_tests").insertOne(newFiles)
                                 console.log(`Created with the following id: ${result.insertedId}`)
@@ -261,7 +277,10 @@ const download = async (req, res) => {
     const files = req.body.files
 
     const fileTypeSplit = req.path.split('/')
-    const columnFile = `${fileTypeSplit[fileTypeSplit.length - 1]}_txt_filename`
+
+    let fileType = fileTypeSplit[fileTypeSplit.length - 1] // * Data, log, ComportText, TelnetText
+    const columnFile = `${mapTest.get(fileType)}_txt_filename`
+    
     let zip = new JSZip();
 
     for (let id of files) {

@@ -5,9 +5,9 @@ module.exports = {
     DB_NAME: 'ate_mongodb_2',
     DB_TEST_COLLECTION: 'ate_tests',
     DB_PROJECT_COLLECTION: 'ate_projects',
-    // HOST: 'http://localhost:8080', // client URL
+    HOST: 'http://localhost:8080', // client URL
     // HOST: 'http://192.168.100.150:80',
-    HOST: 'http://172.105.225.25:80',
+    // HOST: 'http://172.105.225.25:80',
     TOKEN_SECRET: 'jzhpstrcrp0222225678',
     MINUTES_LOGIN_TIME: 3,
     NORMAL_LOGIN_DAYS: 7,
