@@ -109,7 +109,13 @@ export default {
     async getPassedPercentages(id, station) {
       await axios.get(`/api/tests/search/${id}/${station}`).then((res) => {
         this.option.xAxis.data.push(station);
-        this.option.series[0].data.push(res.data.passed_percentages.toFixed(1));
+        if (res.data.passed_percentages != null) {
+          this.option.series[0].data.push(
+            res.data.passed_percentages.toFixed(1)
+          );
+        } else {
+          this.option.series[0].data.push(0.0);
+        }
       });
     },
     handleChange(value) {
