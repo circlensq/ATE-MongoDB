@@ -49,7 +49,9 @@
               <a-menu-item key="download_log" @click="download('log')"
                 >Download Log(.txt)</a-menu-item
               >
-              <a-menu-item key="download_comport" @click="download('ComportText')"
+              <a-menu-item
+                key="download_comport"
+                @click="download('ComportText')"
                 >Download Comport(.txt)</a-menu-item
               >
               <a-menu-item key="download_telnet" @click="download('TelnetText')"
@@ -206,7 +208,7 @@
         <span v-if="searchText && searchedColumn === column.dataIndex">
           <template
             v-for="(fragment, i) in text
-            .toString()
+              .toString()
               .split(new RegExp(`(?<=${searchText})|(?=${searchText})`, 'i'))"
           >
             <mark
@@ -230,12 +232,11 @@
         <template v-else-if="column.dataIndex == 'added_time'">
           {{ testDateFormatted(text) }}
         </template>
+       
         <template
           v-else-if="
             column.dataIndex == 'data_txt_filename' ||
-            column.dataIndex == 'log_txt_filename' ||
-            column.dataIndex == 'comport_txt_filename' ||
-            column.dataIndex == 'telnet_txt_filename'
+            column.dataIndex == 'log_txt_filename'
           "
         >
           <span v-if="text">
@@ -249,6 +250,13 @@
             </a-button>
           </span>
         </template>
+
+        <template
+          v-else-if="column.dataIndex=='test_station' || column.dataIndex == 'serial_number' || column.dataIndex=='mac_address' || column.dataIndex=='test_time_minutes'"
+        >
+          {{ text }}
+        </template>
+
         <template v-else-if="column.dataIndex == 'result'">
           <span>
             <a-tag :color="text === 'PASS' ? '#0be881' : '#ff4d4f'">
@@ -256,8 +264,22 @@
             </a-tag>
           </span>
         </template>
+
         <template v-else>
-          {{ text }}
+          <template v-for="ate_log_name in ate_logs_names" :key="ate_log_name">
+            <span v-if="column.dataIndex == ate_log_name">
+              <span v-if="text">
+                <a-button type="link" @click="toggleModal(text)">
+                  <EyeOutlined twoToneColor="#f39c12" />
+                </a-button>
+              </span>
+              <span v-else>
+                <a-button type="link" style="color: black; cursor: not-allowed">
+                  <EyeInvisibleOutlined />
+                </a-button>
+              </span>
+            </span>
+          </template>
         </template>
       </template>
     </a-table>
@@ -291,6 +313,8 @@ export default defineComponent({
       searchColumn: "",
       data: null,
       loading: false,
+      ate_logs_names: [],
+      flagTemplate: false,
       columns: [
         {
           title: "Result",
@@ -444,6 +468,13 @@ export default defineComponent({
           },
         },
         {
+          title: "Added Time",
+          dataIndex: "added_time",
+          key: "added_time",
+          width: 120,
+          slots: { customRender: "customRender" },
+        },
+        {
           title: "Data(.txt)",
           dataIndex: "data_txt_filename",
           key: "data_txt_filename",
@@ -455,27 +486,6 @@ export default defineComponent({
           dataIndex: "log_txt_filename",
           key: "log_txt_filename",
           width: 150,
-          slots: { customRender: "customRender" },
-        },
-        {
-          title: "Comport(.txt)",
-          dataIndex: "comport_txt_filename",
-          key: "comport_txt_filename",
-          width: 150,
-          slots: { customRender: "customRender" },
-        },
-        {
-          title: "Telnet(.txt)",
-          dataIndex: "telnet_txt_filename",
-          key: "telnet_txt_filename",
-          width: 150,
-          slots: { customRender: "customRender" },
-        },
-        {
-          title: "Added Time",
-          dataIndex: "added_time",
-          key: "added_time",
-          width: 120,
           slots: { customRender: "customRender" },
         },
       ],
@@ -514,6 +524,58 @@ export default defineComponent({
     async fetchTestsById() {
       if (this.selectedProjectId != null) {
         this.spinning = true;
+
+        this.ate_logs_names = await axios
+          .get(`/api/logs/all`)
+          .then(async (res) => {
+            return res.data.logs.txt_filenames;
+          });
+
+        let ate_logs_value = await axios
+          .get(`/api/project/${this.selectedProjectId}`)
+          .then(async (res) => {
+            return res.data.projects.ate_logs;
+          });
+
+        for (let i = 0; i < this.ate_logs_names.length; i++) {
+          let firstChar = this.ate_logs_names[i]
+            .split("_")[0]
+            .charAt(0)
+            .toUpperCase(); // C
+          let restChar = `${this.ate_logs_names[i]
+            .split("_")[0]
+            .substring(1)} (.txt)`; // omport (.txt)
+          let logsColumnTitle = firstChar + restChar; // Comport (.txt)
+
+          let logsColumnObject = {
+            title: logsColumnTitle,
+            dataIndex: this.ate_logs_names[i],
+            key: this.ate_logs_names[i],
+            width: 150,
+            slots: { customRender: "customRender" },
+          };
+
+          // if ate_logs_value = 0 then execute below
+          if (!ate_logs_value[i]) {
+            // search the NOT Used Index in the current this.columns array
+            const foundNotUsedIndex = this.columns.findIndex(
+              (el) => el.dataIndex === this.ate_logs_names[i]
+            );
+
+            this.columns.splice(foundNotUsedIndex, 1); // remove the object from the array based on the index
+          }
+
+          // if ate_logs_value = 1 and found = false then execute below
+          if (ate_logs_value[i]) {
+            const found = this.columns.some(
+              (el) => el.dataIndex === this.ate_logs_names[i]
+            );
+            if (!found) {
+              this.columns.push(logsColumnObject);
+            }
+          }
+        }
+
         await axios
           .get(`/api/tests/${this.selectedProjectId}`)
           .then((res) => {
@@ -536,27 +598,35 @@ export default defineComponent({
                       failedTests.length > 1
                         ? `Fail tests (${failedTests.length}):` +
                           failedTests.map((test) => {
-                            if (test.serial_number === ""){
-                              return test.mac_address
-                            }
-                            else if (test.serial_number != "" && test.mac_address != "")
-                              return test.serial_number + '-' + test.mac_address
-                            
-                            console.log('serial_number', test.serial_number)
+                            if (test.serial_number === "") {
+                              return test.mac_address;
+                            } else if (
+                              test.serial_number != "" &&
+                              test.mac_address != ""
+                            )
+                              return (
+                                test.serial_number + "-" + test.mac_address
+                              );
 
-                            return test.serial_number
+                            console.log("serial_number", test.serial_number);
+
+                            return test.serial_number;
                           })
                         : "Fail test (1): " +
                           failedTests.map((test) => {
-                            if (test.serial_number === ""){
-                              console.log('mac_address', test.mac_address)
-                              return test.mac_address
-                            }
-                            else if (test.serial_number != "" && test.mac_address != "")
-                              return test.serial_number + '-' + test.mac_address
+                            if (test.serial_number === "") {
+                              console.log("mac_address", test.mac_address);
+                              return test.mac_address;
+                            } else if (
+                              test.serial_number != "" &&
+                              test.mac_address != ""
+                            )
+                              return (
+                                test.serial_number + "-" + test.mac_address
+                              );
 
-                            console.log('serial_number', test.serial_number)
-                            return test.serial_number
+                            console.log("serial_number", test.serial_number);
+                            return test.serial_number;
                           }),
                   });
                 } else if (
@@ -630,7 +700,6 @@ export default defineComponent({
       this.selectedRowKeys = selectedRowKeys;
     },
     async download(dataType) {
-    
       await axios({
         method: "post",
         url: `/api/file/download/${dataType}`,

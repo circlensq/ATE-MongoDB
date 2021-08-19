@@ -8,7 +8,8 @@ const userController = require('../controllers/user')
 const testController = require('../controllers/tests')
 const fileController = require('../controllers/file_tests')
 const fileUniversalController = require('../controllers/file_universal')
-const projectController = require('../controllers/project')
+const projectController = require('../controllers/projects')
+const logController = require('../controllers/logs')
 
 // Send CSRF token for session
 router.get('/getcsrftokensecre', csrfProtection, function (req, res) {
@@ -68,5 +69,8 @@ router.post('/project/edit', projectController.editProject)
 router.get('/project/all', projectController.projectsAll)
 router.get('/project/:id', projectController.projectData)
 router.get('/project/search/:name', projectController.searchProject)
+
+// ATE_LOGS Data route
+router.get('/logs/all', logController.getAll )
 
 module.exports = router
