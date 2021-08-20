@@ -10,7 +10,7 @@ exports.getAll =  async (req, res) => {
         });
     }
     catch (err) {
-        console.log('Error create project: ', err);
+        console.log('Error get logs data: ', err);
         return res.status(400).send({ 'error': `${err}` })
     }
 }

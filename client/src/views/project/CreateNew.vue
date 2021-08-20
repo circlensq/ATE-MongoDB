@@ -30,7 +30,44 @@
     <a-form-item label="Project Description" name="description">
       <a-input v-model:value="formState.description" type="textarea" />
     </a-form-item>
+    <a-form-item label="Communication Interface">
+      <a-checkbox-group v-model:value="formState.communications">
+        <a-checkbox v-for="communication in communicationArray" :value="communication" :key="communication" name="communication">{{ communication }}</a-checkbox>
+      </a-checkbox-group>
+    </a-form-item>
+    
+    <!-- New Communication Interface Form field -->
+    <a-form-item
+      required
+      v-for="(newCommunication, index) in formState.newCommunications"
+      :key="newCommunication.key"
+      v-bind="index === 0 ? formItemLayout : formItemLayoutWithOutLabel"
+      :label="index === 0 ? 'New Interface' : ''"
+      :name="['newCommunications', index, 'value']"
+    >
+      <a-input
+        v-model:value="newCommunication.value"
+        placeholder="please input new interface"
+        style="width: 58%"
+      />
+      <MinusCircleOutlined
+        v-if="formState.newCommunications.length > 1"
+        class="dynamic-delete-button"
+        :disabled="formState.newCommunications.length === 1"
+        @click="removeNewCommunication(newCommunication)"
+      />
+    </a-form-item>
+    <a-form-item v-bind="formItemLayoutWithOutLabel">
+      <a-button type="dashed" style="width: 58%" @click="addNewCommunication">
+        <PlusOutlined />
+        Add New Communication Interface
+      </a-button>
+    </a-form-item>
+    <a-form-item v-bind="formItemLayoutWithOutLabel">
+      <a-button @click="resetNewCommunicationForm">Reset New Communication Field</a-button>
+    </a-form-item>
 
+    <!-- Station Form field -->
     <a-form-item
       required
       v-for="(station, index) in formState.stations"
@@ -54,11 +91,11 @@
     <a-form-item v-bind="formItemLayoutWithOutLabel">
       <a-button type="dashed" style="width: 58%" @click="addStation">
         <PlusOutlined />
-        Add stations
+        Add Stations
       </a-button>
     </a-form-item>
     <a-form-item v-bind="formItemLayoutWithOutLabel">
-      <a-button @click="resetForm">Reset</a-button>
+      <a-button @click="resetStationForm">Reset Station Field</a-button>
     </a-form-item>
 
     <a-form-item :wrapper-col="{ span: 14, offset: 14 }">
@@ -82,11 +119,14 @@ export default {
       labelCol: { span: 4 },
       wrapperCol: { span: 14 },
       formRef: {},
+      communicationArray: [],
       formState: {
         name: null,
         stage: "EVT",
         status: "Testing",
         description: null,
+        communications: [],
+        newCommunications: [],
         stations: [],
       },
       formItemLayout: {
@@ -144,12 +184,35 @@ export default {
       },
     };
   },
+  mounted() {
+    this.getAllLogs();
+  },
   methods: {
+    addNewCommunication() {
+      this.formState.newCommunications.push({
+        value: "",
+        key: Date.now(),
+      });
+    },
     addStation() {
       this.formState.stations.push({
         value: "",
         key: Date.now(),
       });
+    },
+    async getAllLogs() {
+      let ate_logs = await axios.get("/api/logs/all").then((res) => {
+        if (res.data.error) return Promise.reject(`${res.data.error}`);
+        return res.data.logs.txt_filenames;
+      });
+
+      this.communicationArray = ate_logs;
+    },
+    removeNewCommunication(item) {
+      let index = this.formState.newCommunications.indexOf(item);
+      if (index !== -1) {
+        this.formState.newCommunications.splice(index, 1);
+      }
     },
     removeStation(item) {
       let index = this.formState.stations.indexOf(item);
@@ -189,6 +252,7 @@ export default {
           "Please input stations"
         );
       } else {
+        console.log("formState", this.formState);
         const token = localStorage.getItem("user");
         await axios({
           method: "post",
@@ -201,6 +265,8 @@ export default {
             status: this.formState.status,
             stage: this.formState.stage,
             description: this.formState.description,
+            communications: this.formState.communications,
+            newCommunications: this.formState.newCommunications,
             stations: this.formState.stations,
           },
         })
@@ -218,6 +284,8 @@ export default {
                 description: null,
               };
               this.formState.stations = [];
+              this.formState.newCommunications = [];
+              this.getAllLogs();
             }
           })
           .catch((err) => {
@@ -225,7 +293,10 @@ export default {
           });
       }
     },
-    resetForm() {
+    resetNewCommunicationForm() {
+      this.formState.newCommunications = [];
+    },
+    resetStationForm() {
       this.formState.stations = [];
     },
   },
