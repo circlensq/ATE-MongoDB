@@ -30,13 +30,14 @@
     <a-form-item label="Project Description" name="description">
       <a-input v-model:value="formState.description" type="textarea" />
     </a-form-item>
+    
+    <!-- New Communication Interface Form field -->
     <a-form-item label="Communication Interface">
       <a-checkbox-group v-model:value="formState.communications">
         <a-checkbox v-for="communication in communicationArray" :value="communication" :key="communication" name="communication">{{ communication }}</a-checkbox>
       </a-checkbox-group>
     </a-form-item>
     
-    <!-- New Communication Interface Form field -->
     <a-form-item
       required
       v-for="(newCommunication, index) in formState.newCommunications"
@@ -252,7 +253,6 @@ export default {
           "Please input stations"
         );
       } else {
-        console.log("formState", this.formState);
         const token = localStorage.getItem("user");
         await axios({
           method: "post",
