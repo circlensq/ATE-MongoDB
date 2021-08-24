@@ -232,7 +232,7 @@
         <template v-else-if="column.dataIndex == 'added_time'">
           {{ testDateFormatted(text) }}
         </template>
-       
+
         <template
           v-else-if="
             column.dataIndex == 'data_txt_filename' ||
@@ -252,7 +252,12 @@
         </template>
 
         <template
-          v-else-if="column.dataIndex=='test_station' || column.dataIndex == 'serial_number' || column.dataIndex=='mac_address' || column.dataIndex=='test_time_minutes'"
+          v-else-if="
+            column.dataIndex == 'test_station' ||
+            column.dataIndex == 'serial_number' ||
+            column.dataIndex == 'mac_address' ||
+            column.dataIndex == 'test_time_minutes'
+          "
         >
           {{ text }}
         </template>
@@ -561,8 +566,9 @@ export default defineComponent({
             const foundNotUsedIndex = this.columns.findIndex(
               (el) => el.dataIndex === this.ate_logs_names[i]
             );
-
-            this.columns.splice(foundNotUsedIndex, 1); // remove the object from the array based on the index
+            if (foundNotUsedIndex > -1){
+              this.columns.splice(foundNotUsedIndex, 1); // remove the object from the array based on the index
+            }
           }
 
           // if ate_logs_value = 1 and found = false then execute below
@@ -608,14 +614,11 @@ export default defineComponent({
                                 test.serial_number + "-" + test.mac_address
                               );
 
-                            console.log("serial_number", test.serial_number);
-
                             return test.serial_number;
                           })
                         : "Fail test (1): " +
                           failedTests.map((test) => {
                             if (test.serial_number === "") {
-                              console.log("mac_address", test.mac_address);
                               return test.mac_address;
                             } else if (
                               test.serial_number != "" &&
@@ -624,8 +627,6 @@ export default defineComponent({
                               return (
                                 test.serial_number + "-" + test.mac_address
                               );
-
-                            console.log("serial_number", test.serial_number);
                             return test.serial_number;
                           }),
                   });
