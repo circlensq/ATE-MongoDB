@@ -58,9 +58,10 @@ Also ensure to free port **:8080** and **:80**
 2. Install MongoDB Compass in your computer, then connect to your **admin** database with **username** and **password** in your docker-compose.yml
 
 3. Then, Create Database named `ate_mongodb` with collection name `auth_users`, `ate_projects`, `ate_logs`, `ate_files` and `ate_tests`.
+
 Configure the `DB_HOST` url in [config.js](server/config/config.js) with
 ```
-DB_HOST: 'mongodb://<username>:<password>@<ip_address>:27017/?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false'
+DB_HOST: 'mongodb://<username>:<password>@<ip_address>:27017/?authSource=admin'
 ```
 4. Open browser, go to _http:<ip_address>_ e.g. `http://192.168.100.150`, it will redirect you to Login page
 

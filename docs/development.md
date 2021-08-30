@@ -90,3 +90,4 @@ The following shows basic `server` folder structure.
 ├── vue.config.js # proxy server is setting here, please change target IP
 └── ... # other common files
 ```
+
