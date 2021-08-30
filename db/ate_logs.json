@@ -1,0 +1,10 @@
+[{
+  "_id": {
+    "$oid": "611daf66e24a1086b8d4a0a9"
+  },
+  "txt_filenames": [
+    "comport_txt_filename",
+    "telnet_txt_filename",
+    "hid_txt_filename"
+  ]
+}]
