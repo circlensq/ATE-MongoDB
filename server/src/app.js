@@ -3,7 +3,7 @@ const express = require('express')
 const cookieParser = require('cookie-parser')
 const path = require('path')
 
-const port = process.env.PORT || 8000
+const port = process.env.PORT || 8088
 const app = express()
 
 let mongoUtil = require('./mongoUtil')
