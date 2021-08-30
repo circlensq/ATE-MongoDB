@@ -7,6 +7,7 @@
     @ok="downloadSingle"
     @cancel="toggleModal"
     width="800px"
+    :bodyStyle="modalBodyStyle"
   >
     <span class="pre-formatted" v-if="contentFile">
       <div style="overflow: auto">
@@ -47,16 +48,14 @@
                 >Download Data(.txt)</a-menu-item
               >
               <a-menu-item key="download_log" @click="download('log')"
-                >Download Log(.txt)</a-menu-item
+                >Download Log(.txt) {{ate_logs_name}}</a-menu-item
               >
               <a-menu-item
-                key="download_comport"
-                @click="download('ComportText')"
-                >Download Comport(.txt)</a-menu-item
-              >
-              <a-menu-item key="download_telnet" @click="download('TelnetText')"
-                >Download Telnet(.txt)</a-menu-item
-              >
+                v-for="ate_logs in ate_logs_names"
+                @click="download(formatLogs(ate_logs))"
+                :key="'download_'+formatLogs(ate_logs)"
+              >Download {{formatLogs(ate_logs)}}(.txt)</a-menu-item>
+
               <a-tooltip title="Danger!" color="red" placement="right">
                 <a-menu-item key="delete">Delete</a-menu-item>
               </a-tooltip>
@@ -320,6 +319,10 @@ export default defineComponent({
       loading: false,
       ate_logs_names: [],
       flagTemplate: false,
+      modalBodyStyle: {
+        maxHeight: '500px',
+        overflowY: 'auto'
+      },
       columns: [
         {
           title: "Result",
@@ -515,6 +518,14 @@ export default defineComponent({
     this.fetchProjects();
   },
   methods: {
+    formatLogs(ateLogs){
+      let logsName = ateLogs.split("_")[0]
+      let firstChar = logsName.substring(0, 1).toUpperCase() // C
+      let restChar = logsName.substring(1, logsName.length) // omport
+      let newName = firstChar + restChar + "Text" // ComportText 
+      
+      return newName
+    },
     async fetchProjects() {
       await axios.get("/api/project/all").then((res) => {
         this.projects = res.data.projects[0];
@@ -823,5 +834,10 @@ export default defineComponent({
 <style scoped>
 .pre-formatted {
   white-space: pre;
+}
+
+.custom-modal-body {
+  overflow-y: auto;
+  max-height: 500px;
 }
 </style>
