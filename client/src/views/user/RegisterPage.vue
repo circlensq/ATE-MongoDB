@@ -172,7 +172,9 @@ export default defineComponent({
     async checkEmailJazzHipster() {
       const email = this.formState.email;
       const re = /^[a-zA-Z0-9](\.?[a-zA-Z0-9]){1,}@jazzhipster\.com\.tw$/g;
+      const re2 = /^[a-zA-Z0-9](\.?[a-zA-Z0-9]){1,}@fy.jazzhipster\.com\.tw$/g;
       const isValid = re.test(String(email).toLowerCase());
+      const isValidFactory = re2.test(String(email).toLowerCase());
 
       if (!email) {
         return Promise.reject("Please input the email");
@@ -197,10 +199,14 @@ export default defineComponent({
         });
 
       if (!isValid) {
-        return Promise.reject("Please use jazzhipster email account");
+        if (!isValidFactory){
+          return Promise.reject("Please use jazzhipster email account");
+        }
       } else {
         return Promise.resolve();
       }
+
+
     },
     submitRegister() {
       let name = this.formState.email.split("@")[0];
