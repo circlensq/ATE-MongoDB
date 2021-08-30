@@ -50,11 +50,10 @@
           v-model:value="formState.test"
           placeholder="Select .txt type"
           name="test_file"
-        >
+      >
           <a-select-option value="Data">Data</a-select-option>
           <a-select-option value="log">log</a-select-option>
-          <a-select-option value="ComportText">ComportText</a-select-option>
-          <a-select-option value="Telnet">TelnetText</a-select-option>
+          <a-select-option v-for="ate_logs in ate_logs_names" :value="formatLogs(ate_logs)" :key="formatLogs(ate_logs)">{{ formatLogs(ate_logs) }}</a-select-option>
         </a-select>
       </a-form-item>
       <input type="hidden" name="project" :value="formState.project" />
@@ -254,6 +253,7 @@ export default {
       data: null,
       onComplete: false,
       loading: false,
+      ate_logs_names: [],
       columns: [
         {
           title: "Result",
@@ -470,7 +470,8 @@ export default {
   },
   mounted() {
     this.fetchProjects();
-    
+    this.getLogs();
+
     this.uppy.on("upload", async () => {
       this.uppy.setMeta({
         project: this.formState.project,
@@ -541,6 +542,14 @@ export default {
     this.uppy.close();
   },
   methods: {
+     formatLogs(ateLogs){
+      let logsName = ateLogs.split("_")[0]
+      let firstChar = logsName.substring(0, 1).toUpperCase() // C
+      let restChar = logsName.substring(1, logsName.length) // omport
+      let newName = firstChar + restChar + "Text" // ComportText 
+      
+      return newName
+    },
     async fetchProjects() {
       await axios.get("/api/project/all").then((res) => {
         this.projects = res.data.projects[0];
@@ -551,6 +560,13 @@ export default {
       await axios.get(`/api/project/search/${value}`).then((res) => {
         this.projectStations = res.data.project.stations;
       });
+    },
+    async getLogs() {
+      this.ate_logs_names = await axios
+        .get(`/api/logs/all`)
+        .then(async (res) => {
+          return res.data.logs.txt_filenames;
+        });
     },
     filterOption(input, option) {
       return option.props.value.toLowerCase().indexOf(input.toLowerCase()) >= 0;

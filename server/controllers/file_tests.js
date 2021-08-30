@@ -1,74 +1,90 @@
-const formidable = require('formidable')
-const fs = require('fs')
+const formidable = require('formidable');
+const fs = require('fs');
 const JSZip = require("jszip");
 const { ObjectId } = require('mongodb');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 
 // MongoDB Connection
-const mongoUtil = require('../src/mongoUtil')
-const config = require('../config/config')
-const db = mongoUtil.getDb()
-const ate_projects = db.collection(config.DB_PROJECT_COLLECTION)
+const mongoUtil = require('../src/mongoUtil');
+const config = require('../config/config');
+const db = mongoUtil.getDb();
+const ate_projects = db.collection(config.DB_PROJECT_COLLECTION);
+const ate_logs = db.collection("ate_logs");
 
-const mapTest = new Map();
 
-mapTest.set('Data', 'data');
-mapTest.set('log', 'log');
-mapTest.set('ComportText', 'comport');
-mapTest.set('TelnetText', 'telnet');
+const formatText = (text) => {
+    if (text === 'Data'){
+        return 'data'
+    }
+    else if (text === 'log'){
+        return 'log'
+    }
+    else {
+        let logsName = text.split("Text")[0] // Comport
+        let firstChar = logsName.substring(0, 1).toLowerCase() // c
+        let restChar = logsName.substring(1, logsName.length) // omport
+        let newName = firstChar + restChar // comport
+        
+        return newName
+    }
+}
 
 const upload = (req, res, next) => {
     const form = new formidable.IncomingForm({ multiples: true })
-    form.parse(req, (err, fields, files) => {
+    form.parse(req, async (err, fields, files) => {
 
-        const files_arr = ['data', 'log', 'comport', 'telnet']
+        let default_files_arr = ['data_txt_filename', 'log_txt_filename']
+        try {
+            let files_arr_data = await ate_logs.findOne()
+            let files_arr = default_files_arr.concat(files_arr_data.txt_filenames)
+            //files_arr = 'data_txt_filename', 'log_txt_filename', 'comport_txt_filename', 'telnet_txt_filename', etc.
 
-        for (let i = 0; i < files_arr.length; i++) {
+            for (let i = 0; i < files_arr.length; i++) {
+                let obj_files = `${files_arr[i].split("_")[0]}` + '_txt_filename'
+                let obj_fields = `${files_arr[i].split("_")[0]}` + '_txt_path'
 
-            let obj_files = `${files_arr[i]}` + '_txt_filename'
-            let obj_fields = `${files_arr[i]}` + '_txt_path'
+                try {
 
-            try {
+                    if (files[obj_files]) {
+                        let oldPath = files[obj_files]['path']
+                        let rawData = fs.readFileSync(oldPath)
 
-                if (files[obj_files]) {
-                    let oldPath = files[obj_files]['path']
-                    let rawData = fs.readFileSync(oldPath)
+                        let split = fields[obj_fields].substring(1, fields[obj_fields].length).split('\\')
+                        let folderPath = __basedir + `/media/uploads/docs/${split[2]}/${split[4]}/${split[5]}/`;
+                        // folderPath = ../ATE-MongoDB/server/media/uploads/docs/Data/Dotboard/2021_006_18/
 
-                    let split = fields[obj_fields].substring(1, fields[obj_fields].length).split('\\')
-                    let folderPath = __basedir + `/media/uploads/docs/${split[2]}/${split[4]}/${split[5]}/`;
-                    // folderPath = ../ATE-MongoDB/server/media/uploads/docs/Data/Dotboard/2021_006_18/
-
-                    if (!fs.existsSync(folderPath)) {
-                        fs.mkdirSync(folderPath, {
-                            recursive: true
-                        });
-                    }
-
-                    // newPath =../ATE-MongoDB/server/media/uploads/docs/Data/Dotboard/DB825083y869_202106181344.txt
-                    let newPath = folderPath + files[obj_files]['name']
-
-                    fs.writeFile(newPath, rawData, (err) => {
-                        if (err) {
-                            console.log(err);
-                            return res.status(400).send({ "err": err })
+                        if (!fs.existsSync(folderPath)) {
+                            fs.mkdirSync(folderPath, {
+                                recursive: true
+                            });
                         }
-                        console.log(`Successful upload ${newPath}`);
-                    })
-                }
-            } catch (err) {
-                console.log(`Error: ${err}`);
-            }
-        }
 
-        return res.status(200).send({ "message": "Successfully uploaded the files" })
+                        // newPath =../ATE-MongoDB/server/media/uploads/docs/Data/Dotboard/DB825083y869_202106181344.txt
+                        let newPath = folderPath + files[obj_files]['name']
+
+                        fs.writeFile(newPath, rawData, (err) => {
+                            if (err) {
+                                console.log(err);
+                                return res.status(400).send({ "err": err })
+                            }
+                            console.log(`Successful upload ${newPath}`);
+                        })
+                    }
+                } catch (err) {
+                    console.log(`Error: ${err}`);
+                }
+            }
+            return res.status(200).send({ "message": "Successfully uploaded the files" })
+        }
+        catch (err) {
+            console.log('Error get logs data: ', err);
+            return res.status(400).send({ "error": "err" })
+        }
     })
 }
 
 const converter = (req, res, next) => {
     const form = new formidable.IncomingForm({ multiples: true })
-    
-    
-
     form.parse(req, async (err, fields, files) => {
         const project = await ate_projects.findOne({ name: fields.project })
 
@@ -92,7 +108,7 @@ const converter = (req, res, next) => {
                 else {
                     if (mandatoryFields.length === 1)
                         mandatoryMsg += mandatoryFields[i]
-                    else 
+                    else
                         mandatoryMsg += mandatoryFields[i] + ", "
                 }
             }
@@ -208,8 +224,8 @@ const converter = (req, res, next) => {
                                         added_time: new Date(new Date(Date.now()).toISOString()),
                                     }
 
-                                    updateFile[`${mapTest.get(fields.test)}_txt_filename`] = databasePath
-                                    if (resultTest != "") 
+                                    updateFile[`${formatText(fields.test)}_txt_filename`] = databasePath
+                                    if (resultTest != "")
                                         updateFile['result'] = resultTest
                                     if (errorCode != "")
                                         updateFile['error_code'] = errorCode
@@ -242,7 +258,7 @@ const converter = (req, res, next) => {
                                     added_time: new Date(new Date(Date.now()).toISOString()),
                                 }
 
-                                newFiles[`${mapTest.get(fields.test)}_txt_filename`] = databasePath
+                                newFiles[`${formatText(fields.test)}_txt_filename`] = databasePath
 
                                 const result = await db.collection("ate_tests").insertOne(newFiles)
                                 console.log(`Created with the following id: ${result.insertedId}`)
@@ -278,9 +294,9 @@ const download = async (req, res) => {
 
     const fileTypeSplit = req.path.split('/')
 
-    let fileType = fileTypeSplit[fileTypeSplit.length - 1] // * Data, log, ComportText, TelnetText
-    const columnFile = `${mapTest.get(fileType)}_txt_filename`
-    
+    let fileType = fileTypeSplit[fileTypeSplit.length - 1] // * Data, log, ComportText, TelnetText, etc.
+    const columnFile = `${formatText(fileType)}_txt_filename`
+
     let zip = new JSZip();
 
     for (let id of files) {

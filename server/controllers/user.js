@@ -179,6 +179,17 @@ exports.submitLoginCode = async (req, res) => {
 
 }
 
+exports.checkPermission = (req, res) => {
+    const token = req.body.token
+    const userToken = jwt.verify(token, config.TOKEN_SECRET)
+    try {
+        return res.status(200).send({'message': 'is allowed', 'is_superuser': userToken.is_superuser})
+    } catch(err) {
+        console.log('Error check permission: ', err)
+        return res.status(401).send({'error': err})
+    }
+}
+
 exports.userEvent = (req, res) => {
     let events = [
         {

@@ -1,7 +1,7 @@
-POST http://localhost:8000/api/accounts/login HTTP/1.1
+POST http://localhost:8088/api/accounts/login HTTP/1.1
 content-type: application/json
 
 {
-    "username": "admin",
-    "password": "admin"
+    "username": "jsate",
+    "password": "jshipster"
 }

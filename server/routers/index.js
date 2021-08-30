@@ -16,7 +16,6 @@ router.get('/getcsrftokensecre', csrfProtection, function (req, res) {
     return res.json({ csrfToken: req.csrfToken() });
 });
 
-
 // Register User
 router.post('/accounts/register', csrfProtection, userController.register)
 router.post('/accounts/register/checkUsername', csrfProtection, userController.checkUsername)
@@ -32,7 +31,7 @@ router.get('/accounts/user/search/:id', userController.searchUser)
 router.post('/accounts/login/code', userController.submitLoginCode)
 
 // Auth Superuser only
-router.post('/superuser', verifyUserToken, IsSuperuser, userController.userEvent)
+router.post('/superuser', verifyUserToken, IsSuperuser, userController.checkPermission)
 
 // Auth staff only
 router.get('/staff', verifyUserToken, IsStaff, userController.userEvent)
@@ -47,8 +46,10 @@ router.get('/tests/search/:query', testController.searchTest)
 router.get('/tests/:id/', testController.getById)
 router.get('/tests/search/:project_id/:test_station', testController.passedPercentages)
 
-// * Test .txt files Upload & Download File API route (for C#) -> ONLY FOR Data, log, ComportText, TelnetText
+// * Test .txt files Upload File API route (for C#) -> ONLY FOR Data, log, ComportText, TelnetText
 router.post('/file/upload', verifyUserToken, IsStaff, fileController.upload)
+
+// * Test .txt files Download File API route (for Website) -> ONLY FOR Data, log, ComportText, TelnetText
 router.post('/file/download/:name', fileController.download)
 
 // * Test .txt files Upload (Converter File) API route (website) -> ONLY FOR Data, log, ComportText, TelnetText
@@ -60,7 +61,7 @@ router.get('/file/universal/all', fileUniversalController.getAll)
 router.post('/file/universal/delete', fileUniversalController.deleteFile)
 router.post('/file/universal/download', fileUniversalController.download)
 
-// Download .txt file and universal files
+// Download single .txt file and universal files
 router.get('/file/download/:name', fileController.downloadSingle)
 
 // Project Data route

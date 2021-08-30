@@ -1,10 +1,33 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import BaseLayout from '../layout/BaseLayout.vue'
+import axios from 'axios'
+
+async function checkAdminPermission () {
+    let token = localStorage.getItem("user")
+    try {
+      let permission = await axios.create({
+        baseURL: "/api",
+        withCredentials: false,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${token}`,
+        }
+      }).post('/superuser/', {
+        token: token
+      })
+      console.log('permission', permission.data.is_superuser)
+      if (permission.data.is_superuser)
+        return true
+    } catch (err) {
+      console.log('Error permission: ', err)
+    }
+    return { path: '/unauthorized' }
+}
 
 const routes = [
   {
     path: '/',
-    redirect: {name: "dashboard-list"},
+    redirect: { name: "dashboard-list" },
     name: 'Layout',
     component: BaseLayout,
     meta: { requiresAuth: true },
@@ -13,44 +36,54 @@ const routes = [
         path: '/dashboard/list',
         component: () => import('@/views/dashboard/ListTest.vue'),
         name: 'dashboard-list',
-        meta: { title: 'Test List', affix: true}
+        meta: { title: 'Test List', affix: true }
       },
       {
         path: '/project/list',
         component: () => import('@/views/project/ListProject.vue'),
         name: 'project-list',
-        meta: { title: 'List Project', affix: true}
+        meta: { title: 'List Project', affix: true },
+        beforeEnter: [checkAdminPermission]
       },
       {
         path: '/project/create',
         component: () => import('@/views/project/CreateNew.vue'),
         name: 'project-create',
-        meta: { title: 'Create New Project', affix: true}
+        meta: { title: 'Create New Project', affix: true },
+        beforeEnter: [checkAdminPermission]
       },
       {
         path: '/project/edit/:id',
         component: () => import('@/views/project/EditProject.vue'),
         name: 'project-edit',
-        meta: { title: 'Edit Project', affix: true}
+        meta: { title: 'Edit Project', affix: true },
+        beforeEnter: [checkAdminPermission]
+
       },
       {
         path: '/project/analysis/:id',
         component: () => import('@/views/project/AnalysisChart.vue'),
         name: 'project-analysis',
-        meta: { title: 'Project Analysis', affix: true}
+        meta: { title: 'Project Analysis', affix: true }
       },
       {
         path: '/upload/files',
         component: () => import('@/views/upload/UploadFiles.vue'),
         name: 'upload-files',
-        meta: { title: 'Upload Files', affix: true}
+        meta: { title: 'Upload Files', affix: true }
       },
       {
         path: '/upload/files/test',
         component: () => import('@/views/upload/UploadTestFiles.vue'),
         name: 'upload-test',
-        meta: { title: 'Upload Test', affix: true}
+        meta: { title: 'Upload Test', affix: true },
+        beforeEnter: [checkAdminPermission]
       },
+      {
+        path: '/unauthorized',
+        name: 'unauthorized',
+        component: () => import('@/views/result/403.vue')
+      }
     ]
   },
   {
@@ -63,6 +96,7 @@ const routes = [
     name: 'register',
     component: () => import('@/views/user/RegisterPage.vue'),
   },
+
   // {
   //   path: '/forgotpassword',
   //   name: 'ForgotPassword',
@@ -73,7 +107,7 @@ const routes = [
   //   name: 'confirm-account',
   //   component: () => import('@/views/user/Confirm.vue'),
   // },
-  
+
 ]
 
 const router = createRouter({
@@ -86,7 +120,7 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth) && !loggedIn) {
     next('/login')
   }
-  next()
+  else next()
 })
 
 export default router
